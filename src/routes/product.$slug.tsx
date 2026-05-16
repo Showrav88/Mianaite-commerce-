@@ -63,7 +63,7 @@ function ProductPage() {
           </div>
           {product.images.length > 1 && (
             <div className="mt-3 flex gap-2">
-              {product.images.map((img, i) => (
+              {product.images.map((img: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
@@ -159,7 +159,7 @@ function ProductPage() {
           <div>
             <h2 className="text-xl font-bold mb-3">{t("pd.specs")}</h2>
             <dl className="divide-y border rounded-lg">
-              {product.specs.map((s, i) => (
+              {product.specs.map((s: { en: string; bn: string; value: string }, i: number) => (
                 <div key={i} className="flex justify-between py-2.5 px-3 text-sm">
                   <dt className="text-muted-foreground">{s[lang === "en" ? "en" : "bn"]}</dt>
                   <dd className="font-medium">{s.value}</dd>
