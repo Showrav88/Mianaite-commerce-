@@ -69,7 +69,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "AITeShops" },
       { name: "msapplication-TileColor", content: "#e8621a" },
-      { name: "msapplication-TileImage", content: "/shops/mood-on-logo.jpg" },
+      { name: "msapplication-TileImage", content: "/shops/ait-logo.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" },
       { rel: "manifest", href: "/manifest.json" },
-      { rel: "apple-touch-icon", href: "/shops/mood-on-logo.jpg" },
+      { rel: "apple-touch-icon", href: "/shops/ait-logo.png" },
     ],
   }),
   shellComponent: RootShell,
