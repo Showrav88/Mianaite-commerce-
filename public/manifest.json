@@ -1,0 +1,42 @@
+{
+  "name": "AITeShops",
+  "short_name": "AITeShops",
+  "description": "Bangladesh's Everyday Online Marketplace — Shop electronics, fashion, groceries and more.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e8621a",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/shops/mood-on-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/shops/mood-on-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/shops/mood-on-logo.jpg",
+      "sizes": "1280x1280",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping"],
+  "screenshots": [
+    {
+      "src": "/shops/mood-on-logo.jpg",
+      "sizes": "1280x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "AITeShops home screen"
+    }
+  ]
+}
