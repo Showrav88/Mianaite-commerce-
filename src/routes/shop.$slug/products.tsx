@@ -1,11 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ShoppingCart, SlidersHorizontal, X } from 'lucide-react'
+import { ShoppingCart, SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
-import { useAdminStore, ALL_CATEGORIES, fmt, effectivePrice, discountBadgeText, hasProductDiscount } from '@/lib/admin-store'
+import { z } from 'zod'
+import { useAdminStore, ALL_CATEGORIES, SUBCATEGORIES_BY_CATEGORY, fmt, effectivePrice, discountBadgeText, hasProductDiscount } from '@/lib/admin-store'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
 
+const searchSchema = z.object({ sub: z.string().optional() })
+
 export const Route = createFileRoute('/shop/$slug/products')({
+  validateSearch: searchSchema,
   component: ShopProductsPage,
 })
 
@@ -14,26 +18,36 @@ function ShopProductsPage() {
   const { shops, products } = useAdminStore()
   const { addItem, forceAddFromShop } = useShopCart()
   const { lang } = useI18n()
+  const { sub: subFromUrl } = Route.useSearch()
   const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [selectedSubcat, setSelectedSubcat] = useState<string | null>(subFromUrl ?? null)
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default')
   const [conflictProduct, setConflictProduct] = useState<any>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
+  const [localSearch, setLocalSearch] = useState('')
 
   const shop = shops.find(s => s.slug === slug)!
   const cats = shop.allowedCategories.map(id => ALL_CATEGORIES.find(c => c.id === id)).filter(Boolean)
   const radiusMap = { sharp: '8px', medium: '16px', rounded: '24px' }
   const radius = radiusMap[shop.theme.borderRadius]
 
-  // Get search from parent layout via URL (the parent sets searchQuery in context but we can't easily get it, use state instead)
-  const [localSearch, setLocalSearch] = useState('')
+  const activeCatId = selectedCat ?? shop.allowedCategories[0]
+  const allSubcats = activeCatId ? (SUBCATEGORIES_BY_CATEGORY[activeCatId] ?? []) : shop.allowedCategories.flatMap(cid => SUBCATEGORIES_BY_CATEGORY[cid] ?? [])
+  const baseProducts = products.filter(p => p.shopId === shop.id && p.status === 'active' && shop.allowedCategories.includes(p.categoryId))
+  const activeSubcats = allSubcats.filter(sub => baseProducts.some(p => p.subcategoryId === sub.id))
 
-  let shopProducts = products
-    .filter(p => p.shopId === shop.id && p.status === 'active' && shop.allowedCategories.includes(p.categoryId))
+  let shopProducts = baseProducts
     .filter(p => !selectedCat || p.categoryId === selectedCat)
+    .filter(p => !selectedSubcat || p.subcategoryId === selectedSubcat)
     .filter(p => !localSearch || p.name.toLowerCase().includes(localSearch.toLowerCase()) || p.description.toLowerCase().includes(localSearch.toLowerCase()))
 
   if (sortBy === 'price_asc') shopProducts = [...shopProducts].sort((a, b) => effectivePrice(a) - effectivePrice(b))
   if (sortBy === 'price_desc') shopProducts = [...shopProducts].sort((a, b) => effectivePrice(b) - effectivePrice(a))
+
+  function handleCatSelect(catId: string | null) {
+    setSelectedCat(catId)
+    setSelectedSubcat(null)
+  }
 
   function handleAddToCart(product: typeof shopProducts[0]) {
     const result = addItem({ productId: product.id, shopId: shop.id, name: product.name, price: effectivePrice(product), image: product.image })
@@ -43,22 +57,46 @@ function ShopProductsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        {/* Category filter */}
+    <div className="container mx-auto px-4 py-8 space-y-4">
+      {/* Search + Sort row */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          <input
+            value={localSearch}
+            onChange={e => setLocalSearch(e.target.value)}
+            placeholder={lang === 'en' ? 'Search products…' : 'পণ্য খুঁজুন…'}
+            className="w-full pl-8 pr-4 py-2 text-sm border rounded-xl focus:outline-none bg-white"
+          />
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <SlidersHorizontal className="w-4 h-4 text-gray-400" />
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as any)}
+            className="text-xs border rounded-lg px-2 py-2 text-gray-600 focus:outline-none bg-white"
+          >
+            <option value="default">{lang === 'en' ? 'Default' : 'ডিফল্ট'}</option>
+            <option value="price_asc">{lang === 'en' ? 'Price ↑' : 'দাম ↑'}</option>
+            <option value="price_desc">{lang === 'en' ? 'Price ↓' : 'দাম ↓'}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Category row — only show when shop has multiple categories */}
+      {cats.length > 1 && (
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setSelectedCat(null)}
+            onClick={() => handleCatSelect(null)}
             className="text-xs font-medium px-3 py-1.5 rounded-full border transition-colors"
             style={!selectedCat ? { backgroundColor: shop.theme.primaryColor, color: 'white', borderColor: shop.theme.primaryColor } : { borderColor: '#e5e7eb', color: '#6b7280' }}
           >
-            {lang === 'en' ? 'All' : 'সব'}
+            {lang === 'en' ? 'All Categories' : 'সব ক্যাটাগরি'}
           </button>
           {cats.map(cat => cat && (
             <button
               key={cat.id}
-              onClick={() => setSelectedCat(selectedCat === cat.id ? null : cat.id)}
+              onClick={() => handleCatSelect(selectedCat === cat.id ? null : cat.id)}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors"
               style={selectedCat === cat.id ? { backgroundColor: shop.theme.primaryColor, color: 'white', borderColor: shop.theme.primaryColor } : { borderColor: '#e5e7eb', color: '#6b7280' }}
             >
@@ -66,24 +104,34 @@ function ShopProductsPage() {
             </button>
           ))}
         </div>
+      )}
 
-        {/* Sort */}
-        <div className="ml-auto flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-gray-400" />
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value as any)}
-            className="text-xs border rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none"
+      {/* Subcategory row */}
+      {activeSubcats.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedSubcat(null)}
+            className="text-xs font-medium px-3 py-1.5 rounded-full border transition-colors"
+            style={!selectedSubcat ? { backgroundColor: shop.theme.primaryColor, color: 'white', borderColor: shop.theme.primaryColor } : { borderColor: '#e5e7eb', color: '#6b7280' }}
           >
-            <option value="default">{lang === 'en' ? 'Default' : 'ডিফল্ট'}</option>
-            <option value="price_asc">{lang === 'en' ? 'Price: Low to High' : 'দাম: কম থেকে বেশি'}</option>
-            <option value="price_desc">{lang === 'en' ? 'Price: High to Low' : 'দাম: বেশি থেকে কম'}</option>
-          </select>
+            {lang === 'en' ? 'All' : 'সব'}
+          </button>
+          {activeSubcats.map(sub => (
+            <button
+              key={sub.id}
+              onClick={() => setSelectedSubcat(selectedSubcat === sub.id ? null : sub.id)}
+              className="text-xs font-medium px-3 py-1.5 rounded-full border transition-colors"
+              style={selectedSubcat === sub.id ? { backgroundColor: shop.theme.primaryColor, color: 'white', borderColor: shop.theme.primaryColor } : { borderColor: '#e5e7eb', color: '#6b7280' }}
+            >
+              {lang === 'en' ? sub.name : sub.nameBn}
+            </button>
+          ))}
         </div>
-      </div>
+      )}
 
-      <p className="text-xs text-gray-500 mb-4">
-        {shopProducts.length} {lang === 'en' ? 'products found' : 'পণ্য পাওয়া গেছে'}
+      <p className="text-xs text-gray-400">
+        {shopProducts.length} {lang === 'en' ? 'products' : 'পণ্য'}
+        {selectedSubcat && (() => { const s = activeSubcats.find(s => s.id === selectedSubcat); return s ? ` — ${lang === 'en' ? s.name : s.nameBn}` : '' })()}
       </p>
 
       {/* Products grid */}

@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
 import { Check, Layers, Upload, Cloud } from 'lucide-react'
 import { uploadToCloudinary, cloudinaryConfigured } from '@/lib/cloudinary'
-import { useAdminStore, ALL_CATEGORIES, type ShopTheme } from '@/lib/admin-store'
+import { useAdminStore, type ShopTheme } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+
 
 const ALL_COVERS = [
   { id: 'mood_street', name: 'Street Fashion BD', nameBn: 'স্ট্রিট ফ্যাশন', grad: ['#0a0a0a', '#1a1a2e'], accent: '#c9a84c', icons: ['👕', '🏙️', '🌆'], shopSpecific: 'shop_5' },
@@ -167,27 +168,6 @@ function SettingsPage() {
                 <Input value={profile.motto} onChange={e => setProfile(p => ({ ...p, motto: e.target.value }))} placeholder={lang === 'en' ? 'Your brand tagline...' : 'আপনার ব্র্যান্ডের ট্যাগলাইন...'} />
               </div>
 
-              {/* Allowed categories (read-only) */}
-              <div className="space-y-2 pt-2">
-                <Separator />
-                <p className="text-sm font-medium pt-2">{lang === 'en' ? 'Categories Assigned by Super Admin' : 'সুপার অ্যাডমিন কর্তৃক নির্ধারিত ক্যাটাগরি'}</p>
-                <div className="flex flex-wrap gap-2">
-                  {shop.allowedCategories.length === 0
-                    ? <p className="text-sm text-muted-foreground">{lang === 'en' ? 'No categories assigned yet.' : 'এখনো কোনো ক্যাটাগরি নির্ধারিত হয়নি।'}</p>
-                    : shop.allowedCategories.map(cid => {
-                      const cat = ALL_CATEGORIES.find(c => c.id === cid)
-                      return cat ? (
-                        <span key={cid} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-white" style={{ backgroundColor: primaryColor }}>
-                          {cat.icon} {lang === 'en' ? cat.name : cat.nameBn}
-                        </span>
-                      ) : null
-                    })
-                  }
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {lang === 'en' ? 'Contact your super admin to change category access.' : 'ক্যাটাগরি পরিবর্তনের জন্য সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।'}
-                </p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

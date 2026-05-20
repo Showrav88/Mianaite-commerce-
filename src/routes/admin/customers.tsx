@@ -11,7 +11,7 @@ export const Route = createFileRoute('/admin/customers')({
 })
 
 const SOURCE_LABELS: Record<string, { en: string; bn: string; color: string }> = {
-  direct: { en: 'Direct', bn: 'সরাসরি', color: '#6366f1' },
+  direct: { en: 'Showroom', bn: 'শোরুম', color: '#6366f1' },
   homepage: { en: 'Homepage', bn: 'হোমপেজ', color: '#22c55e' },
   search: { en: 'Search', bn: 'সার্চ', color: '#f59e0b' },
   referral: { en: 'Referral', bn: 'রেফারেল', color: '#ec4899' },
@@ -39,9 +39,6 @@ function AdminCustomersPage() {
   const selectedOrders = detailCustomer ? customerOrders.filter(o => o.customerId === detailCustomer) : []
 
   const primary = shop?.theme.primaryColor ?? '#6366f1'
-  const radiusMap = { sharp: '8px', medium: '16px', rounded: '24px' } as const
-  const radius = shop ? radiusMap[shop.theme.borderRadius] : '12px'
-
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Header */}

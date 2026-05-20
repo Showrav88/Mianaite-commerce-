@@ -9,7 +9,7 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { useAdminStore, ALL_CATEGORIES } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: () => { throw redirect({ to: '/login' }) },
+  beforeLoad: () => { throw redirect({ to: '/login', search: { shop: 'mood-on' } }) },
   component: Home,
   head: () => ({
     meta: [

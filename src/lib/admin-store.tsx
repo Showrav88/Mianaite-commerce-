@@ -36,6 +36,7 @@ export interface Shop {
   facebookGroupUrl?: string
   activeSale?: ShopActiveSale
   activeCoverId?: string
+  broadcast?: { text: string; active: boolean }
 }
 
 export interface AdminUser {
@@ -86,6 +87,8 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<string, Subcategory[]> = {
     { id: 'sub_mens_pants', name: "Men's Pants", nameBn: 'পুরুষের প্যান্ট', categoryId: 'cat_fashion' },
     { id: 'sub_mens_shorts', name: "Men's Shorts", nameBn: 'পুরুষের শর্টস', categoryId: 'cat_fashion' },
     { id: 'sub_mens_suit', name: "Men's Suit", nameBn: 'পুরুষের স্যুট', categoryId: 'cat_fashion' },
+    { id: 'sub_mens_socks', name: "Men's Socks", nameBn: 'পুরুষের মোজা', categoryId: 'cat_fashion' },
+    { id: 'sub_mens_innerwear', name: "Men's Innerwear", nameBn: 'পুরুষের আন্ডারওয়্যার', categoryId: 'cat_fashion' },
     { id: 'sub_saree', name: 'Saree', nameBn: 'শাড়ি', categoryId: 'cat_fashion' },
     { id: 'sub_salwar', name: 'Salwar Kameez', nameBn: 'সালোয়ার কামিজ', categoryId: 'cat_fashion' },
     { id: 'sub_dress', name: "Women's Dress", nameBn: 'মহিলাদের পোশাক', categoryId: 'cat_fashion' },
@@ -253,7 +256,7 @@ const INITIAL_SHOPS: Shop[] = [
     id: 'shop_5', name: 'Mood On', slug: 'mood-on',
     description: "Laxmipur's most popular fashion brand since 2013 — Gents Clothing, Beauty & Style",
     ownerId: 'adm_5', ownerName: 'Shoga', status: 'active',
-    allowedCategories: ['cat_fashion', 'cat_beauty', 'cat_jewelry'],
+    allowedCategories: ['cat_fashion'],
     theme: { primaryColor: '#1a1a2e', accentColor: '#c9a84c', borderRadius: 'medium', fontFamily: 'Poppins' },
     stats: { products: 89, orders: 2340, revenue: 28500000, customers: 1876 },
     createdAt: '2013-01-01', logo: '/shops/mood-on-logo.jpg', contactEmail: 'moodon2013@gmail.com',
@@ -266,6 +269,10 @@ const INITIAL_SHOPS: Shop[] = [
       discountPercent: 20, productIds: [],
     },
     activeCoverId: 'mood_street',
+    broadcast: {
+      text: '🔥 ঈদ স্পেশাল সেল — 20% ছাড়!  ⚡ সীমিত সময়ের অফার! 🛍️ এখনই কিনুন!',
+      active: true,
+    },
   },
 ]
 
@@ -315,9 +322,9 @@ const INITIAL_PRODUCTS: AdminProduct[] = [
   { id: 'p10', name: "Children's Learning Kit", sku: 'KDS-LRN-001', categoryId: 'cat_kids', shopId: 'shop_3', price: 1299, stock: 2, lowStockThreshold: 5, status: 'active', image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=600&q=85&fit=crop', description: 'Educational toys and activity kit', sold: 123 },
   { id: 'p11', name: 'Mood On Premium Panjabi', sku: 'MON-PNJ-001', categoryId: 'cat_fashion', subcategoryId: 'sub_mens_shirt', shopId: 'shop_5', price: 2499, costPrice: 1200, discountType: 'percent', discountValue: 20, stock: 45, lowStockThreshold: 10, status: 'active', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=85', images: ['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=85', 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=600&q=85', 'https://images.unsplash.com/photo-1621072156002-532b8ebe7b88?w=600&q=85', 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&q=85'], description: 'Premium quality panjabi — perfect for Eid, Puja & all occasions', sold: 312, tags: ['bestseller', 'eid', 'premium'] },
   { id: 'p12', name: 'Mood On Gents Shirt (Summer)', sku: 'MON-SHT-002', categoryId: 'cat_fashion', subcategoryId: 'sub_mens_shirt', shopId: 'shop_5', price: 1299, stock: 80, lowStockThreshold: 15, status: 'active', image: 'https://images.unsplash.com/photo-1602810319428-019690571b5b?w=600&q=85', images: ['https://images.unsplash.com/photo-1602810319428-019690571b5b?w=600&q=85', 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&q=85', 'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&q=85'], description: 'Light cotton shirt perfect for Bangladesh summer', sold: 189, tags: ['summer', 'cotton'] },
-  { id: 'p13', name: 'Mood On Gents Shorts', sku: 'MON-SHT-003', categoryId: 'cat_fashion', subcategoryId: 'sub_mens_shorts', shopId: 'shop_5', price: 799, stock: 60, lowStockThreshold: 10, status: 'active', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f43?w=600&q=85', images: ['https://images.unsplash.com/photo-1591195853828-11db59a44f43?w=600&q=85', 'https://images.unsplash.com/photo-1565084888279-aca607ecce0c?w=600&q=85'], description: 'Comfortable gents shorts for casual wear', sold: 245, tags: ['casual', 'summer'] },
+
   { id: 'p14', name: 'Mood On Winter Sweater', sku: 'MON-SWT-001', categoryId: 'cat_fashion', subcategoryId: 'sub_mens_shirt', shopId: 'shop_5', price: 3499, costPrice: 1800, stock: 30, lowStockThreshold: 5, status: 'active', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=85', images: ['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=85', 'https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=600&q=85', 'https://images.unsplash.com/photo-1614975059251-992f11792b9f?w=600&q=85'], description: 'Warm & stylish winter sweater for gents', sold: 98, tags: ['winter', 'warm'] },
-  { id: 'p15', name: 'Mood On Perfume — Black Edition', sku: 'MON-PRF-001', categoryId: 'cat_beauty', subcategoryId: 'sub_perfume', shopId: 'shop_5', price: 1999, costPrice: 900, discountType: 'amount', discountValue: 300, stock: 25, lowStockThreshold: 5, status: 'active', image: 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=85', images: ['https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=85', 'https://images.unsplash.com/photo-1606819717115-9159c900370b?w=600&q=85', 'https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=600&q=85'], description: 'Signature Mood On perfume — long lasting, bold & elegant', sold: 156, tags: ['perfume', 'bestseller', 'gift'] },
+
   { id: 'p16', name: 'Mood On Gents Wallet', sku: 'MON-WLT-001', categoryId: 'cat_jewelry', subcategoryId: 'sub_accessories_j', shopId: 'shop_5', price: 899, stock: 40, lowStockThreshold: 8, status: 'active', image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=85', images: ['https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=85', 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85'], description: 'Slim leather wallet — classic & durable', sold: 203 },
 ]
 
@@ -350,8 +357,27 @@ const StoreCtx = createContext<AdminStore>({
 })
 
 /** Demo persistence until a real API exists (same browser only). */
-const PRODUCTS_LOCAL_KEY = 'banglaflow_admin_products_v1'
-const SHOPS_LOCAL_KEY = 'banglaflow_admin_shops_v1'
+const PRODUCTS_LOCAL_KEY = 'banglaflow_admin_products_v2'
+const SHOPS_LOCAL_KEY = 'banglaflow_admin_shops_v2'
+
+const REMOVED_PRODUCT_IDS = new Set(['p13', 'p15'])
+
+function mergeProducts(stored: AdminProduct[]): AdminProduct[] {
+  const filtered = stored.filter(p => !REMOVED_PRODUCT_IDS.has(p.id))
+  const storedMap = new Map(filtered.map(p => [p.id, p]))
+  const initialMerged = INITIAL_PRODUCTS.map(p => storedMap.get(p.id) ?? p)
+  const initialIds = new Set(INITIAL_PRODUCTS.map(p => p.id))
+  const additions = filtered.filter(p => !initialIds.has(p.id))
+  return [...initialMerged, ...additions]
+}
+
+function mergeShops(stored: Shop[]): Shop[] {
+  const storedMap = new Map(stored.map(s => [s.id, s]))
+  const initialMerged = INITIAL_SHOPS.map(s => storedMap.get(s.id) ?? s)
+  const initialIds = new Set(INITIAL_SHOPS.map(s => s.id))
+  const additions = stored.filter(s => !initialIds.has(s.id))
+  return [...initialMerged, ...additions]
+}
 
 function parseStoredShops(raw: string): Shop[] | null {
   try {
@@ -389,12 +415,12 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       const rawShops = localStorage.getItem(SHOPS_LOCAL_KEY)
       if (rawShops) {
         const loadedShops = parseStoredShops(rawShops)
-        if (loadedShops) setShopsState(loadedShops)
+        if (loadedShops) setShopsState(mergeShops(loadedShops))
       }
       const rawProducts = localStorage.getItem(PRODUCTS_LOCAL_KEY)
       if (rawProducts) {
         const loadedProducts = parseStoredProducts(rawProducts)
-        if (loadedProducts) setProductsState(loadedProducts)
+        if (loadedProducts) setProductsState(mergeProducts(loadedProducts))
       }
     } catch {
       /* ignore corrupt storage */
@@ -407,10 +433,10 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       if (!e.newValue) return
       if (e.key === SHOPS_LOCAL_KEY) {
         const loaded = parseStoredShops(e.newValue)
-        if (loaded) setShopsState(loaded)
+        if (loaded) setShopsState(mergeShops(loaded))
       } else if (e.key === PRODUCTS_LOCAL_KEY) {
         const loaded = parseStoredProducts(e.newValue)
-        if (loaded) setProductsState(loaded)
+        if (loaded) setProductsState(mergeProducts(loaded))
       }
     }
     window.addEventListener('storage', onStorage)

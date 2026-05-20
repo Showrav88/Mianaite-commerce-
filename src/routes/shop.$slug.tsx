@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from '@tanstack/react-router'
-import { ShoppingCart, Search, Store, Globe, User, X, Menu, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Search, Store, Globe, User, X, Menu, ChevronRight, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
-import { useAdminStore } from '@/lib/admin-store'
+import { useAdminStore, SUBCATEGORIES_BY_CATEGORY } from '@/lib/admin-store'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
 import { useCustomerStore } from '@/lib/customer-store'
@@ -13,12 +13,13 @@ export const Route = createFileRoute('/shop/$slug')({
 
 function ShopLayout() {
   const { slug } = Route.useParams()
-  const { shops } = useAdminStore()
+  const { shops, products } = useAdminStore()
   const { count } = useShopCart()
   const { lang, setLang } = useI18n()
   const { currentCustomer, logoutCustomer } = useCustomerStore()
   const [authOpen, setAuthOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [productsOpen, setProductsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const pathname = useRouterState({ select: s => s.location.pathname })
 
@@ -43,6 +44,9 @@ function ShopLayout() {
   const radius = radiusMap[shop.theme.borderRadius]
   const fontMap = { Inter: "'Inter', sans-serif", Poppins: "'Poppins', sans-serif", Roboto: "'Roboto', sans-serif" }
   const font = fontMap[shop.theme.fontFamily]
+
+  const shopActiveProducts = products.filter(p => p.shopId === shop.id && p.status === 'active')
+  const menuSubcats = shop.allowedCategories.flatMap(cid => SUBCATEGORIES_BY_CATEGORY[cid] ?? []).filter(sub => shopActiveProducts.some(p => p.subcategoryId === sub.id))
 
   const isHome = pathname === `/shop/${slug}`
 
@@ -184,22 +188,61 @@ function ShopLayout() {
               <button onClick={() => setMenuOpen(false)} className="text-white/80"><X className="w-5 h-5" /></button>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-1">
-              {[
-                { label: lang === 'en' ? 'Home' : 'হোম', to: '/shop/$slug' as const },
-                { label: lang === 'en' ? 'Products' : 'পণ্য', to: '/shop/$slug/products' as const },
-                { label: lang === 'en' ? 'About' : 'আমাদের', to: '/shop/$slug/about' as const },
-              ].map(item => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  params={{ slug }}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
+              <Link
+                to="/shop/$slug"
+                params={{ slug }}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+                {lang === 'en' ? 'Home' : 'হোম'}
+              </Link>
+
+              {/* Products — expandable */}
+              <div>
+                <button
+                  onClick={() => setProductsOpen(o => !o)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
                 >
                   <ChevronRight className="w-4 h-4 text-gray-400" />
-                  {item.label}
-                </Link>
-              ))}
+                  <span className="flex-1 text-left">{lang === 'en' ? 'Products' : 'পণ্য'}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${productsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {productsOpen && (
+                  <div className="ml-7 mt-0.5 space-y-0.5">
+                    <Link
+                      to="/shop/$slug/products"
+                      params={{ slug }}
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-50 text-xs font-medium transition-colors"
+                    >
+                      {lang === 'en' ? 'All Products' : 'সব পণ্য'}
+                    </Link>
+                    {menuSubcats.map(sub => (
+                      <Link
+                        key={sub.id}
+                        to="/shop/$slug/products"
+                        params={{ slug }}
+                        search={{ sub: sub.id }}
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-50 text-xs font-medium transition-colors"
+                      >
+                        {lang === 'en' ? sub.name : sub.nameBn}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Link
+                to="/shop/$slug/about"
+                params={{ slug }}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+                {lang === 'en' ? 'About' : 'আমাদের'}
+              </Link>
             </nav>
             <div className="px-4 py-4 border-t text-xs text-gray-400 text-center">
               <p className="font-medium" style={{ color: shop.theme.accentColor }}>{shop.name}</p>

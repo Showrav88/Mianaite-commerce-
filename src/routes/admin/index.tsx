@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ShoppingCart, Package, AlertTriangle, TrendingUp, ArrowUpRight, Clock } from 'lucide-react'
+import { ShoppingCart, Package, AlertTriangle, TrendingUp, ArrowUpRight, Clock, Megaphone, Check } from 'lucide-react'
+import { useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useAdminStore, ALL_CATEGORIES, fmt } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
@@ -39,11 +41,25 @@ function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: 
 
 function AdminDashboard() {
   const { user } = useAuth()
-  const { orders, products, shops } = useAdminStore()
+  const { orders, products, shops, setShops } = useAdminStore()
   const { t, lang } = useI18n()
 
   const shop = shops.find(s => s.id === user?.shopId)
   const primaryColor = shop?.theme.primaryColor ?? '#f97316'
+
+  const [broadcastText, setBroadcastText] = useState(shop?.broadcast?.text ?? '')
+  const [broadcastActive, setBroadcastActive] = useState(shop?.broadcast?.active ?? false)
+  const [broadcastSaved, setBroadcastSaved] = useState(false)
+
+  function saveBroadcast() {
+    if (!shop) return
+    setShops(shops.map(s => s.id === shop.id
+      ? { ...s, broadcast: { text: broadcastText, active: broadcastActive } }
+      : s
+    ))
+    setBroadcastSaved(true)
+    setTimeout(() => setBroadcastSaved(false), 2500)
+  }
 
   const myOrders = orders.filter(o => o.shopId === user?.shopId)
   const myProducts = products.filter(p => p.shopId === user?.shopId)
@@ -108,6 +124,58 @@ function AdminDashboard() {
         <StatCard icon={Package} label={t('admin.products')} value={String(myProducts.length)} sub={`${myProducts.filter(p => p.status === 'active').length} ${lang === 'en' ? 'active' : 'সক্রিয়'}`} color="#6366f1" />
         <StatCard icon={AlertTriangle} label={t('admin.lowStock')} value={String(lowStockItems.length + outOfStock.length)} sub={`${outOfStock.length} ${lang === 'en' ? 'out of stock' : 'স্টক শেষ'}`} color="#f97316" />
       </div>
+
+      {/* Broadcast Banner */}
+      {shop && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Megaphone className="w-4 h-4" style={{ color: primaryColor }} />
+                {lang === 'en' ? 'Shop Broadcast Banner' : 'শপ ব্রডকাস্ট ব্যানার'}
+              </CardTitle>
+              <button
+                type="button"
+                onClick={() => setBroadcastActive(v => !v)}
+                className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                style={{ backgroundColor: broadcastActive ? primaryColor : '#d1d5db' }}
+              >
+                <span
+                  className="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: broadcastActive ? 'translateX(22px)' : 'translateX(2px)' }}
+                />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {lang === 'en' ? 'This scrolling text shows on your shop homepage when active.' : 'সক্রিয় থাকলে এই টেক্সট শপের হোমপেজে স্ক্রোল করে দেখাবে।'}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <textarea
+              value={broadcastText}
+              onChange={e => setBroadcastText(e.target.value)}
+              rows={2}
+              placeholder={lang === 'en' ? '🔥 Sale text with emoji... e.g. 🔥 Eid Special — 20% OFF! ⚡ Limited time!' : '🔥 অফারের টেক্সট লিখুন... যেমন: 🔥 ঈদ স্পেশাল সেল — ২০% ছাড়! ⚡ সীমিত সময়!'}
+              className="w-full text-sm border rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-1"
+              style={{ '--tw-ring-color': primaryColor } as any}
+            />
+            {broadcastText && broadcastActive && (
+              <div className="rounded-lg overflow-hidden border border-red-200 bg-red-600 text-white py-1.5 px-3 text-xs font-bold truncate opacity-90">
+                {lang === 'en' ? 'Preview:' : 'প্রিভিউ:'} {broadcastText}
+              </div>
+            )}
+            <Button
+              size="sm"
+              className="gap-2 text-white"
+              style={{ backgroundColor: primaryColor }}
+              onClick={saveBroadcast}
+              disabled={!broadcastText.trim()}
+            >
+              {broadcastSaved ? <><Check className="w-3.5 h-3.5" />{lang === 'en' ? 'Saved!' : 'সংরক্ষিত!'}</> : (lang === 'en' ? 'Save & Publish' : 'সেভ করুন')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Allowed categories — updates live when super admin changes access */}
       {shop && (

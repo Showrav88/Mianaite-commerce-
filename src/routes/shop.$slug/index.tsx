@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ShoppingCart, TrendingUp, ArrowRight, Tag, Flame, Play, ChevronLeft, ChevronRight, Star, ExternalLink, Phone } from 'lucide-react'
+import { ShoppingCart, TrendingUp, ArrowRight, Tag, Flame, Play, ChevronLeft, ChevronRight, Star, ExternalLink, Phone, Trophy } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
-import { useAdminStore, ALL_CATEGORIES, fmt, effectivePrice, discountBadgeText, hasProductDiscount } from '@/lib/admin-store'
+import { useAdminStore, ALL_CATEGORIES, SUBCATEGORIES_BY_CATEGORY, fmt, effectivePrice, discountBadgeText, hasProductDiscount } from '@/lib/admin-store'
 import { productYoutubeId, productFacebookPageUrl } from '@/lib/social-embed'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
@@ -95,9 +95,16 @@ function ShopHomePage() {
   const [addedId, setAddedId] = useState<string | null>(null)
   const [festIdx, setFestIdx] = useState(0)
   const [fading, setFading] = useState(false)
+  const [selectedSubcat, setSelectedSubcat] = useState<string | null>(null)
 
   const shop = shops.find(s => s.slug === slug)!
-  const shopProducts = products.filter(p => p.shopId === shop.id && p.status === 'active' && shop.allowedCategories.includes(p.categoryId))
+  const allShopProducts = products.filter(p => p.shopId === shop.id && p.status === 'active' && shop.allowedCategories.includes(p.categoryId))
+  const activeSubcats = shop.allowedCategories
+    .flatMap(cid => SUBCATEGORIES_BY_CATEGORY[cid] ?? [])
+    .filter(sub => allShopProducts.some(p => p.subcategoryId === sub.id))
+  const shopProducts = selectedSubcat
+    ? allShopProducts.filter(p => p.subcategoryId === selectedSubcat)
+    : allShopProducts
   const cats = shop.allowedCategories.map(id => ALL_CATEGORIES.find(c => c.id === id)).filter(Boolean)
   const radiusMap = { sharp: '8px', medium: '16px', rounded: '24px' }
   const radius = radiusMap[shop.theme.borderRadius]
@@ -137,6 +144,8 @@ function ShopHomePage() {
   const saleProducts = activeSale
     ? shopProducts.filter(p => !activeSale.productIds.length || activeSale.productIds.includes(p.id))
     : []
+
+  const popularProducts = [...shopProducts].sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0)).slice(0, 4)
 
   const isMoodOnCover = (fest as any).isMoodOn
   const patternType = (fest as any).patternType ?? 'dots'
@@ -373,16 +382,17 @@ function ShopHomePage() {
         </button>
       </div>
 
-      {/* ━━━ Sale ticker ━━━ */}
-      {activeSale && (
+      {/* ━━━ Broadcast / Sale ticker ━━━ */}
+      {(shop.broadcast?.active || activeSale) && (
         <div className="bg-red-600 text-white py-2 overflow-hidden relative">
           <div className="ticker-wrap whitespace-nowrap text-xs sm:text-sm font-bold inline-block">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <span key={i} className="mx-10">
-                🔥 {lang === 'en' ? activeSale.name : activeSale.nameBn}
-                {' — '}{activeSale.discountPercent}% {lang === 'en' ? 'OFF' : 'ছাড়'}!
-                &nbsp;⚡ {lang === 'en' ? 'Limited time offer!' : 'সীমিত সময়ের অফার!'}
-                &nbsp;🛍️ {lang === 'en' ? 'Shop now!' : 'এখনই কিনুন!'}
+                {shop.broadcast?.active
+                  ? shop.broadcast.text
+                  : activeSale
+                    ? `🔥 ${lang === 'en' ? activeSale.name : activeSale.nameBn} — ${activeSale.discountPercent}% ${lang === 'en' ? 'OFF' : 'ছাড়'}! ⚡ ${lang === 'en' ? 'Limited time offer!' : 'সীমিত সময়ের অফার!'} 🛍️ ${lang === 'en' ? 'Shop now!' : 'এখনই কিনুন!'}`
+                    : ''}
               </span>
             ))}
           </div>
@@ -413,6 +423,40 @@ function ShopHomePage() {
           </section>
         )}
 
+        {/* ━━━ Subcategory filters ━━━ */}
+        {activeSubcats.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                {lang === 'en' ? 'Filter by' : 'ফিল্টার'}
+              </h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedSubcat(null)}
+                className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
+                style={!selectedSubcat
+                  ? { backgroundColor: shop.theme.primaryColor, color: '#fff', borderColor: shop.theme.primaryColor }
+                  : { borderColor: '#e5e7eb', color: '#6b7280' }}
+              >
+                {lang === 'en' ? 'All' : 'সব'}
+              </button>
+              {activeSubcats.map(sub => (
+                <button
+                  key={sub.id}
+                  onClick={() => setSelectedSubcat(selectedSubcat === sub.id ? null : sub.id)}
+                  className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  style={selectedSubcat === sub.id
+                    ? { backgroundColor: shop.theme.primaryColor, color: '#fff', borderColor: shop.theme.primaryColor }
+                    : { borderColor: '#e5e7eb', color: '#6b7280' }}
+                >
+                  {lang === 'en' ? sub.name : sub.nameBn}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ━━━ Active Big Sale section ━━━ */}
         {activeSale && saleProducts.length > 0 && (
           <section className="bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-5 sm:p-7 border border-red-100">
@@ -438,6 +482,36 @@ function ShopHomePage() {
               {saleProducts.slice(0, 4).map(product => (
                 <ProductCard key={product.id} product={product} shop={shop} slug={slug} radius={radius} lang={lang} addedId={addedId} onAddToCart={handleAddToCart} highlight />
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* ━━━ Most Popular ━━━ */}
+        {popularProducts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                <h2 className="text-base sm:text-lg font-bold text-gray-900">
+                  {lang === 'en' ? 'Most Popular' : 'সবচেয়ে জনপ্রিয়'}
+                </h2>
+              </div>
+              <Link to="/shop/$slug/products" params={{ slug }} className="text-sm font-medium flex items-center gap-1 hover:underline" style={{ color: shop.theme.primaryColor }}>
+                {lang === 'en' ? 'View All' : 'সব দেখুন'} <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {popularProducts.map((product, idx) => {
+                const rankEmoji = ['🥇', '🥈', '🥉', '4️⃣'][idx]
+                return (
+                  <div key={product.id} className="relative">
+                    <div className="absolute -top-2 -left-2 z-10 w-8 h-8 rounded-full bg-amber-400 text-white text-sm font-bold flex items-center justify-center shadow-md border-2 border-white">
+                      {rankEmoji}
+                    </div>
+                    <ProductCard product={product} shop={shop} slug={slug} radius={radius} lang={lang} addedId={addedId} onAddToCart={handleAddToCart} />
+                  </div>
+                )
+              })}
             </div>
           </section>
         )}
