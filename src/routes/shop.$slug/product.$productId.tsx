@@ -1,86 +1,119 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { z } from 'zod'
-import { ShoppingCart, ArrowLeft, Package, CheckCircle, Store, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { ShoppingCart, ArrowLeft, Package, CheckCircle, Store, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { useState, useCallback, useRef } from 'react'
 import { useAdminStore, ALL_CATEGORIES, SUBCATEGORIES_BY_CATEGORY, fmt, effectivePrice, discountBadgeText, hasProductDiscount } from '@/lib/admin-store'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
 import { ProductVideoSection } from '@/components/shop/ProductVideoSection'
 
-const productSearchSchema = z.object({
-  from: z.enum(['sale']).optional(),
-})
+const productSearchSchema = z.object({ from: z.enum(['sale']).optional() })
 
 export const Route = createFileRoute('/shop/$slug/product/$productId')({
   validateSearch: productSearchSchema,
   component: ProductDetailPage,
 })
 
-/* ─── Zoom Lens Component ───────────────────────────────────── */
-function ZoomLens({ src, alt, onOpenLightbox }: { src: string; alt: string; onOpenLightbox: () => void }) {
+/* ─── Image viewer: lens on desktop hover, tap-to-zoom on mobile ── */
+function ProductImageViewer({ src, alt }: { src: string; alt: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [isZooming, setIsZooming] = useState(false)
-  const [pos, setPos] = useState({ x: 0.5, y: 0.5 })
+  const [zoomed, setZoomed] = useState(false)
+  const [origin, setOrigin] = useState('50% 50%')
+  const [lensPos, setLensPos] = useState({ x: 0.5, y: 0.5 })
+  const [hovering, setHovering] = useState(false)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const ZOOM = 2.5
+  const LENS = 180
 
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  const getPos = (cx: number, cy: number) => {
     const r = containerRef.current?.getBoundingClientRect()
-    if (!r) return
-    setPos({
-      x: Math.max(0.01, Math.min(0.99, (e.clientX - r.left) / r.width)),
-      y: Math.max(0.01, Math.min(0.99, (e.clientY - r.top) / r.height)),
-    })
+    if (!r) return { x: 0.5, y: 0.5 }
+    return {
+      x: Math.max(0.01, Math.min(0.99, (cx - r.left) / r.width)),
+      y: Math.max(0.01, Math.min(0.99, (cy - r.top) / r.height)),
+    }
   }
 
-  const ZOOM = 3.5 // magnification level
-  const LENS = 180  // lens size in px
+  const doZoom = (cx: number, cy: number) => {
+    const p = getPos(cx, cy)
+    setOrigin(`${p.x * 100}% ${p.y * 100}%`)
+    setZoomed(true)
+    setHovering(false)
+  }
+
+  const doUnzoom = () => { setZoomed(false); setOrigin('50% 50%') }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Main image + lens */}
+    <div className="relative">
       <div
         ref={containerRef}
         className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 select-none"
-        onMouseEnter={() => setIsZooming(true)}
-        onMouseLeave={() => setIsZooming(false)}
-        onMouseMove={handleMouseMove}
-        onClick={onOpenLightbox}
-        style={{ cursor: isZooming ? 'crosshair' : 'zoom-in' }}
+        style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in', touchAction: 'pan-y' }}
+        onMouseEnter={() => !zoomed && setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        onMouseMove={e => { if (!zoomed) setLensPos(getPos(e.clientX, e.clientY)) }}
+        onClick={e => { zoomed ? doUnzoom() : doZoom(e.clientX, e.clientY) }}
+        onTouchStart={e => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+        onTouchEnd={e => {
+          if (!touchStartRef.current) return
+          const dx = Math.abs(e.changedTouches[0].clientX - touchStartRef.current.x)
+          const dy = Math.abs(e.changedTouches[0].clientY - touchStartRef.current.y)
+          touchStartRef.current = null
+          if (dx > 10 || dy > 10) return      // swipe → pass through to image nav
+          e.preventDefault()                   // tap → prevent ghost click
+          zoomed ? doUnzoom() : doZoom(e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+        }}
       >
         <img
           src={src}
           alt={alt}
-          className="w-full h-full object-contain p-3"
           draggable={false}
+          onContextMenu={e => e.preventDefault()}
+          className="w-full h-full object-contain p-3 select-none"
+          style={{
+            transform: zoomed ? `scale(${ZOOM})` : 'scale(1)',
+            transformOrigin: origin,
+            transition: 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)',
+            WebkitTouchCallout: 'none',
+          } as React.CSSProperties}
         />
 
-        {/* Zoom lens follows cursor */}
-        {isZooming && (
+        {/* Desktop hover lens */}
+        {hovering && !zoomed && (
           <div
-            className="absolute pointer-events-none rounded-full overflow-hidden border-2 border-white shadow-2xl z-30"
+            className="absolute pointer-events-none rounded-full overflow-hidden border-2 border-white z-30"
             style={{
-              width: LENS,
-              height: LENS,
-              left: `${pos.x * 100}%`,
-              top: `${pos.y * 100}%`,
+              width: LENS, height: LENS,
+              left: `${lensPos.x * 100}%`, top: `${lensPos.y * 100}%`,
               transform: 'translate(-50%, -50%)',
               backgroundImage: `url(${src})`,
               backgroundSize: `${ZOOM * 100}%`,
-              backgroundPosition: `${pos.x * 100}% ${pos.y * 100}%`,
+              backgroundPosition: `${lensPos.x * 100}% ${lensPos.y * 100}%`,
               backgroundRepeat: 'no-repeat',
               boxShadow: '0 0 0 2px rgba(255,255,255,0.6), 0 8px 32px rgba(0,0,0,0.3)',
             }}
           />
         )}
 
-        {/* Click-to-fullscreen hint */}
+        {/* Zoom hint label (bottom-right) — fades out when zoomed */}
         <div
-          className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2.5 py-1.5 rounded-full flex items-center gap-1.5 transition-opacity"
-          style={{ opacity: isZooming ? 0 : 1 }}
+          className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/40 text-white text-[11px] px-2.5 py-1.5 rounded-full font-medium pointer-events-none transition-opacity duration-200"
+          style={{ opacity: zoomed ? 0 : 1 }}
         >
-          <Maximize2 className="w-3.5 h-3.5" />
-          {/* hint only on non-zoom state */}
+          <Search className="w-3 h-3" />
+          <span>Zoom</span>
         </div>
       </div>
+
+      {/* Explicit zoom toggle button (top-right, always tappable) */}
+      <button
+        className="absolute top-3 right-3 z-20 bg-white/90 hover:bg-white text-gray-700 rounded-full p-2 shadow-md transition-all active:scale-90"
+        style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
+        onClick={e => { e.stopPropagation(); zoomed ? doUnzoom() : (setOrigin('50% 50%'), setZoomed(true)) }}
+        title={zoomed ? 'Zoom out' : 'Zoom in'}
+      >
+        <Search className="w-4 h-4" />
+      </button>
     </div>
   )
 }
@@ -96,32 +129,17 @@ function ProductDetailPage() {
   const [added, setAdded] = useState(false)
   const [conflictOpen, setConflictOpen] = useState(false)
   const [imgIdx, setImgIdx] = useState(0)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIdx, setLightboxIdx] = useState(0)
+  const swipeStartX = useRef(0)
 
   const shop = shops.find(s => s.slug === slug)!
   const product = products.find(p => p.id === productId)
   const radiusMap = { sharp: '8px', medium: '16px', rounded: '24px' }
   const radius = radiusMap[shop.theme.borderRadius]
 
-  // Max 4 images per product
   const allImgs = product?.images?.length ? product.images.slice(0, 4) : product?.image ? [product.image] : []
 
-  const openLightbox = (idx: number) => { setLightboxIdx(idx); setLightboxOpen(true) }
-  const closeLightbox = useCallback(() => setLightboxOpen(false), [])
-  const prevLb = useCallback(() => setLightboxIdx(i => (i - 1 + allImgs.length) % allImgs.length), [allImgs.length])
-  const nextLb = useCallback(() => setLightboxIdx(i => (i + 1) % allImgs.length), [allImgs.length])
-
-  useEffect(() => {
-    if (!lightboxOpen) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox()
-      if (e.key === 'ArrowLeft') prevLb()
-      if (e.key === 'ArrowRight') nextLb()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [lightboxOpen, closeLightbox, prevLb, nextLb])
+  const prevImg = useCallback(() => setImgIdx(i => (i - 1 + allImgs.length) % allImgs.length), [allImgs.length])
+  const nextImg = useCallback(() => setImgIdx(i => (i + 1) % allImgs.length), [allImgs.length])
 
   if (!product) {
     return (
@@ -157,11 +175,10 @@ function ProductDetailPage() {
       <style>{`
         @keyframes cartPop { 0%{transform:scale(1)} 40%{transform:scale(1.08)} 70%{transform:scale(0.97)} 100%{transform:scale(1)} }
         .cart-pop { animation: cartPop 0.4s ease; }
-        @keyframes fadeInScale { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
-        .lightbox-enter { animation: fadeInScale 0.18s ease; }
       `}</style>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      {/* pb-28 on mobile so content clears the sticky bottom bar */}
+      <div className="container mx-auto px-4 py-8 max-w-5xl pb-28 md:pb-8">
         {from === 'sale' && (
           <div className="mb-4 flex items-start gap-2 rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: shop.theme.primaryColor + '18', color: shop.theme.primaryColor }}>
             <Store className="w-4 h-4 shrink-0 mt-0.5" />
@@ -174,25 +191,42 @@ function ProductDetailPage() {
           {lang === 'en' ? 'Back to Products' : 'পণ্যে ফিরুন'}
         </Link>
 
-        <div className="grid md:grid-cols-2 gap-10">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
 
-          {/* ─── Image Gallery with Zoom Lens ─── */}
+          {/* ─── Image gallery ─── */}
           <div className="flex flex-col gap-3">
-            {/* Zoom image */}
-            <ZoomLens
-              src={allImgs[imgIdx] ?? ''}
-              alt={product.name}
-              onOpenLightbox={() => openLightbox(imgIdx)}
-            />
+            {/* Swipe wrapper (handles left/right swipe to change image) */}
+            <div
+              className="relative"
+              onTouchStart={e => { swipeStartX.current = e.touches[0].clientX }}
+              onTouchEnd={e => {
+                const dx = e.changedTouches[0].clientX - swipeStartX.current
+                if (Math.abs(dx) > 40 && allImgs.length > 1) { dx < 0 ? nextImg() : prevImg() }
+              }}
+            >
+              <ProductImageViewer src={allImgs[imgIdx] ?? ''} alt={product.name} />
 
-            {/* Discount badge overlay — separate from zoom container */}
-            <div className="relative -mt-3">
+              {/* Discount badge overlay */}
               {discLabel && !isOut && (
-                <span className="absolute top-0 left-0 text-xs font-bold bg-red-600 text-white px-2.5 py-1 rounded-full shadow animate-pulse -translate-y-full">{discLabel}</span>
+                <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                  <span className="text-xs font-bold bg-red-600 text-white px-2.5 py-1 rounded-full shadow">{discLabel}</span>
+                </div>
+              )}
+
+              {/* Prev / Next arrows */}
+              {allImgs.length > 1 && (
+                <>
+                  <button onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white rounded-full p-1.5 shadow-md transition-all active:scale-90" style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}>
+                    <ChevronLeft className="w-4 h-4 text-gray-700" />
+                  </button>
+                  <button onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white rounded-full p-1.5 shadow-md transition-all active:scale-90" style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}>
+                    <ChevronRight className="w-4 h-4 text-gray-700" />
+                  </button>
+                </>
               )}
             </div>
 
-            {/* Thumbnail strip (max 4) */}
+            {/* Thumbnail strip */}
             {allImgs.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {allImgs.map((img, i) => (
@@ -222,15 +256,20 @@ function ProductDetailPage() {
               </div>
             )}
 
-            {/* Zoom instruction */}
-            <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1.5">
-              🔍 {lang === 'en' ? 'Hover to zoom · Click for fullscreen' : 'জুম করতে হোভার করুন · ফুলস্ক্রিনের জন্য ক্লিক করুন'}
+            {/* Contextual hint */}
+            <p className="hidden md:flex text-center text-xs text-gray-400 items-center justify-center gap-1.5">
+              <Search className="w-3 h-3" />
+              {lang === 'en' ? 'Hover to zoom · Click image to zoom in/out' : 'হোভার করে জুম করুন · ক্লিক করে জুম করুন'}
+            </p>
+            <p className="md:hidden text-center text-xs text-gray-400 flex items-center justify-center gap-1.5">
+              <Search className="w-3 h-3" />
+              {lang === 'en' ? 'Tap image to zoom · Swipe to change photo' : 'ট্যাপ করে জুম করুন · সোয়াইপ করে ছবি বদলান'}
             </p>
           </div>
 
-          {/* ─── Product Info ─── */}
+          {/* ─── Product info ─── */}
           <div className="flex flex-col gap-4">
-            {/* Badges */}
+            {/* Category / subcategory chips */}
             <div className="flex flex-wrap gap-2">
               {cat && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: shop.theme.primaryColor + '20', color: shop.theme.primaryColor }}>
@@ -245,9 +284,9 @@ function ProductDetailPage() {
             </div>
 
             <h1 className="text-2xl font-bold text-gray-900 leading-snug">{product.name}</h1>
-            {product.sku && <p className="text-xs text-gray-400 font-mono">SKU: {product.sku}</p>}
+            {product.sku && <p className="text-xs text-gray-400 font-mono -mt-2">SKU: {product.sku}</p>}
 
-            {/* Price */}
+            {/* Price row */}
             <div className="flex flex-wrap items-baseline gap-3">
               <p className="text-3xl font-bold" style={{ color: shop.theme.primaryColor }}>{fmt(salePrice)}</p>
               {hasProductDiscount(product) && salePrice < product.price && (
@@ -258,18 +297,7 @@ function ProductDetailPage() {
               )}
             </div>
 
-            <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
-
-            {/* Tags */}
-            {product.tags && product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {product.tags.map(tag => (
-                  <span key={tag} className="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">#{tag}</span>
-                ))}
-              </div>
-            )}
-
-            {/* Stock */}
+            {/* Stock badge */}
             <div>
               {isOut ? (
                 <span className="text-xs text-red-600 font-medium bg-red-50 px-3 py-1 rounded-full">{lang === 'en' ? 'Out of Stock' : 'স্টক নেই'}</span>
@@ -283,7 +311,17 @@ function ProductDetailPage() {
               )}
             </div>
 
-            {/* Qty */}
+            <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
+
+            {product.tags && product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {product.tags.map(tag => (
+                  <span key={tag} className="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">#{tag}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Qty selector */}
             {!isOut && (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">{lang === 'en' ? 'Qty:' : 'পরিমাণ:'}</span>
@@ -295,8 +333,8 @@ function ProductDetailPage() {
               </div>
             )}
 
-            {/* CTA */}
-            <div className="flex gap-3 flex-wrap">
+            {/* Desktop CTA — hidden on mobile (sticky bar handles it) */}
+            <div className="hidden md:flex gap-3 flex-wrap">
               <button
                 disabled={isOut}
                 onClick={handleAddToCart}
@@ -317,8 +355,7 @@ function ProductDetailPage() {
               </Link>
             </div>
 
-            {/* COD note */}
-            <div className="pt-3 border-t">
+            <div className="hidden md:block pt-3 border-t">
               <p className="text-xs text-gray-500 flex items-center gap-2">
                 <Package className="w-4 h-4 text-gray-400" />
                 {lang === 'en' ? 'Cash on Delivery available across Bangladesh' : 'সারা বাংলাদেশে ক্যাশ অন ডেলিভারি পাওয়া যাচ্ছে'}
@@ -327,55 +364,38 @@ function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Video */}
         <ProductVideoSection product={product} lang={lang} />
       </div>
 
-      {/* ─── Fullscreen Lightbox ─── */}
-      {lightboxOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 lightbox-enter"
-          onClick={closeLightbox}
-        >
-          <button onClick={closeLightbox} className="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2.5 transition-colors z-10">
-            <X className="w-6 h-6" />
+      {/* ─── Mobile sticky bottom bar ─── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-100 px-4 pt-3 pb-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex gap-3 items-center max-w-lg mx-auto">
+          <Link
+            to="/shop/$slug/checkout"
+            params={{ slug }}
+            className="shrink-0 py-3 px-4 border-2 font-semibold rounded-xl text-sm flex items-center gap-1.5 transition-colors hover:bg-gray-50"
+            style={{ color: shop.theme.primaryColor, borderColor: shop.theme.primaryColor, borderRadius: radius }}
+          >
+            {lang === 'en' ? 'Cart' : 'কার্ট'}
+          </Link>
+          <button
+            disabled={isOut}
+            onClick={handleAddToCart}
+            className={`flex-1 py-3 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${added ? 'cart-pop' : ''}`}
+            style={{ backgroundColor: added ? '#22c55e' : shop.theme.primaryColor, borderRadius: radius }}
+          >
+            {added
+              ? <><CheckCircle className="w-5 h-5" />{lang === 'en' ? 'Added!' : 'যোগ হয়েছে!'}</>
+              : <><ShoppingCart className="w-5 h-5" />{lang === 'en' ? 'Add to Cart' : 'কার্টে যোগ করুন'}</>}
           </button>
-
-          {allImgs.length > 1 && (
-            <>
-              <button onClick={e => { e.stopPropagation(); prevLb() }} className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/25 rounded-full p-3 transition-colors z-10">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <button onClick={e => { e.stopPropagation(); nextLb() }} className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/25 rounded-full p-3 transition-colors z-10">
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </>
-          )}
-
-          <img
-            src={allImgs[lightboxIdx]}
-            alt={product.name}
-            className="max-w-full max-h-[88vh] object-contain rounded-xl shadow-2xl"
-            onClick={e => e.stopPropagation()}
-            draggable={false}
-          />
-
-          {allImgs.length > 1 && (
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {allImgs.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={e => { e.stopPropagation(); setLightboxIdx(i) }}
-                  className="rounded-full transition-all"
-                  style={{ width: lightboxIdx === i ? '24px' : '8px', height: '8px', backgroundColor: lightboxIdx === i ? (shop.theme.accentColor ?? '#fff') : 'rgba(255,255,255,0.35)' }}
-                />
-              ))}
-            </div>
-          )}
         </div>
-      )}
+        <p className="text-center text-[10px] text-gray-400 mt-2 flex items-center justify-center gap-1">
+          <Package className="w-3 h-3" />
+          {lang === 'en' ? 'Cash on Delivery · Nationwide' : 'ক্যাশ অন ডেলিভারি · সারা বাংলাদেশ'}
+        </p>
+      </div>
 
-      {/* ─── Cart Conflict Dialog ─── */}
+      {/* ─── Cart conflict dialog ─── */}
       {conflictOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
