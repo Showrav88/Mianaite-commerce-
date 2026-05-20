@@ -302,7 +302,7 @@ const INITIAL_ADMINS: AdminUser[] = [
     createdAt: '2024-05-01',
   },
   {
-    id: 'adm_5', name: 'Shoga', email: 'Shoga.moodon@gmail.com', phone: '01700000000',
+    id: 'adm_5', name: 'Sohag', email: 'Sohag.moodon@gmail.com', phone: '01700000000',
     role: 'shop_admin', shopId: 'shop_5', shopName: 'Mood On', status: 'active',
     permissions: ['manage_products', 'manage_orders', 'manage_inventory', 'view_analytics', 'manage_settings'],
     createdAt: '2013-01-01', lastLogin: '2026-05-20',

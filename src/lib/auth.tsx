@@ -24,7 +24,7 @@ export const DEMO_ACCOUNTS: AuthUser[] = [
   { id: 'adm_1', name: 'Rahim Tech', email: 'rahim@techhub.bd', role: 'shop_admin', shopId: 'shop_1', shopName: 'TechHub BD' },
   { id: 'adm_2', name: 'Fatema Fashion', email: 'fatema@fashionista.bd', role: 'shop_admin', shopId: 'shop_2', shopName: 'Fashionista BD' },
   { id: 'adm_3', name: 'Karim Groceries', email: 'karim@freshmart.bd', role: 'shop_admin', shopId: 'shop_3', shopName: 'FreshMart' },
-  { id: 'adm_5', name: 'Shoga', email: 'Shoga.moodon@gmail.com', role: 'shop_admin', shopId: 'shop_5', shopName: 'Mood On' },
+  { id: 'adm_5', name: 'Sohag', email: 'Sohag.moodon@gmail.com', role: 'shop_admin', shopId: 'shop_5', shopName: 'Mood On' },
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
