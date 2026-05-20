@@ -144,10 +144,10 @@ function ShopProductsPage() {
             const salePrice = effectivePrice(product)
             const discLabel = discountBadgeText(product, lang)
             return (
-              <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
+              <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md active:shadow-md transition-all group cursor-pointer">
                 <Link to="/shop/$slug/product/$productId" params={{ slug, productId: product.id }} className="block">
                   <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
+                    <img src={product.image} alt={product.name} className="w-full h-full object-contain p-2 group-hover:scale-105 group-active:scale-105 transition-transform duration-300" />
                     {isOut && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="text-white text-[10px] font-medium bg-black/50 px-2 py-0.5 rounded-full">

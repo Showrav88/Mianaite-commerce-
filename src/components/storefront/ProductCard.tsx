@@ -11,7 +11,7 @@ export function ProductCard({ product }: { product: Product }) {
   const outOfStock = product.stock <= 0;
 
   return (
-    <div className="group bg-card rounded-xl overflow-hidden border border-transparent hover:border-primary/20 active:border-primary/20 hover:shadow-(--shadow-hover) active:shadow-(--shadow-hover) transition-all duration-300">
+    <div className="group cursor-pointer bg-card rounded-xl overflow-hidden border border-transparent hover:border-primary/20 active:border-primary/20 hover:shadow-(--shadow-hover) active:shadow-(--shadow-hover) transition-all duration-300">
       <Link to="/product/$slug" params={{ slug: product.slug }} className="block relative aspect-square bg-secondary overflow-hidden">
         <img
           src={product.images[0]}
