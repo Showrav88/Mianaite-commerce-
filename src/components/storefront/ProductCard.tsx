@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart, Star } from "lucide-react";
 import { useI18n, formatBDT } from "@/lib/i18n";
@@ -11,13 +12,16 @@ export function ProductCard({ product }: { product: Product }) {
   const outOfStock = product.stock <= 0;
 
   return (
-    <div className="group cursor-pointer bg-card rounded-xl overflow-hidden border border-transparent hover:border-primary/20 active:border-primary/20 hover:shadow-(--shadow-hover) active:shadow-(--shadow-hover) transition-all duration-300">
+    <div className="group bg-card rounded-xl overflow-hidden border border-transparent hover:border-primary/20 hover:shadow-(--shadow-hover) transition-all duration-300">
       <Link to="/product/$slug" params={{ slug: product.slug }} className="block relative aspect-square bg-secondary overflow-hidden">
         <img
           src={product.images[0]}
           alt={product.name[lang]}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 group-active:scale-105 transition-transform duration-300"
+          draggable={false}
+          onContextMenu={(e) => e.preventDefault()}
+          style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none pointer-events-none"
         />
         {disc > 0 && (
           <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[11px] font-bold px-2 py-0.5 rounded">
@@ -32,7 +36,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
       <div className="p-3">
         <Link to="/product/$slug" params={{ slug: product.slug }}>
-          <h3 className="text-sm font-medium line-clamp-2 min-h-[2.5rem] group-hover:text-primary group-active:text-primary transition">
+          <h3 className="text-sm font-medium line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition">
             {product.name[lang]}
           </h3>
         </Link>
