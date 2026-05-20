@@ -82,13 +82,6 @@ const [authOpen, setAuthOpen] = useState(false)
           >
             {lang === 'en' ? 'Continue Shopping' : 'কেনাকাটা চালিয়ে যান'}
           </Link>
-          <Link
-            to="/shops"
-            className="py-3 border text-gray-600 font-medium text-sm rounded-xl hover:bg-gray-50 transition-colors"
-            style={{ borderRadius: radius }}
-          >
-            {lang === 'en' ? 'Browse Other Shops' : 'অন্য শপ দেখুন'}
-          </Link>
         </div>
       </div>
     )
