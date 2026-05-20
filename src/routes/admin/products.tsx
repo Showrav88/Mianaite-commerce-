@@ -553,7 +553,7 @@ function ProductsPage() {
                 const hasDiscount = ep < p.price
                 const hiddenFromStore = !shop?.allowedCategories.includes(p.categoryId)
                 return (
-                  <tr key={p.id} className={`hover:bg-slate-50/50 ${hiddenFromStore ? 'opacity-60' : ''}`}>
+                  <tr key={p.id} className="hover:bg-slate-50/50">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="relative shrink-0">
@@ -570,11 +570,6 @@ function ProductsPage() {
                         <div className="min-w-0">
                           <p className="font-medium truncate max-w-[140px]">{p.name}</p>
                           <div className="flex flex-wrap gap-1 mt-0.5">
-                            {hiddenFromStore && (
-                              <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
-                                {lang === 'en' ? '⚠ Hidden from store' : '⚠ শপে লুকানো'}
-                              </span>
-                            )}
                             {(p.tags ?? []).slice(0, 2).map(tag => (
                               <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-full">{tag}</span>
                             ))}
@@ -590,8 +585,7 @@ function ProductsPage() {
                         {cat && (
                           <span className={`text-xs px-2 py-0.5 rounded-full block w-fit ${hiddenFromStore ? 'bg-amber-50 text-amber-700' : 'bg-violet-50 text-violet-700'}`}>
                             {cat.icon} {lang === 'en' ? cat.name : cat.nameBn}
-                            {hiddenFromStore && <span className="ml-1 opacity-60">{lang === 'en' ? '(blocked)' : '(বন্ধ)'}</span>}
-                          </span>
+                            </span>
                         )}
                         {subcat && <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full block w-fit">{lang === 'en' ? subcat.name : subcat.nameBn}</span>}
                       </div>
