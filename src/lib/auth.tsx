@@ -19,6 +19,18 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx>({ user: null, login: () => {}, logout: () => {} })
 
+const STORAGE_KEY = 'auth_user'
+
+function readStorage(): AuthUser | null {
+  try {
+    if (typeof window === 'undefined') return null
+    const s = localStorage.getItem(STORAGE_KEY)
+    return s ? (JSON.parse(s) as AuthUser) : null
+  } catch {
+    return null
+  }
+}
+
 export const DEMO_ACCOUNTS: AuthUser[] = [
   { id: 'sa_1', name: 'Super Admin', email: 'superadmin@aiteshops.com', role: 'super_admin' },
   { id: 'adm_1', name: 'Rahim Tech', email: 'rahim@techhub.bd', role: 'shop_admin', shopId: 'shop_1', shopName: 'TechHub BD' },
@@ -28,9 +40,20 @@ export const DEMO_ACCOUNTS: AuthUser[] = [
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(readStorage)
+
+  function login(u: AuthUser) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(u)) } catch {}
+    setUser(u)
+  }
+
+  function logout() {
+    try { localStorage.removeItem(STORAGE_KEY) } catch {}
+    setUser(null)
+  }
+
   return (
-    <Ctx.Provider value={{ user, login: setUser, logout: () => setUser(null) }}>
+    <Ctx.Provider value={{ user, login, logout }}>
       {children}
     </Ctx.Provider>
   )

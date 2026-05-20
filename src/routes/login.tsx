@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Store, Globe, ShieldCheck } from 'lucide-react'
 import { z } from 'zod'
@@ -16,6 +16,11 @@ const loginSearchSchema = z.object({
 
 export const Route = createFileRoute('/login')({
   validateSearch: loginSearchSchema,
+  beforeLoad: ({ search }) => {
+    if (!search.shop && !search.redirect?.startsWith('/superadmin')) {
+      throw redirect({ to: '/login', search: { ...search, shop: 'mood-on' } })
+    }
+  },
   component: LoginPage,
   head: () => ({ meta: [{ title: 'Login — AITeShops Admin' }] }),
 })
