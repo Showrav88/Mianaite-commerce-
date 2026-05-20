@@ -23,13 +23,19 @@ export function Header() {
       <div className="bg-primary text-primary-foreground text-xs">
         <div className="container mx-auto px-4 py-1.5 flex justify-between items-center">
           <span className="hidden sm:inline">📞 16770 • {lang === "en" ? "Free delivery over ৳1500" : "৳১৫০০ এর বেশি অর্ডারে ফ্রি ডেলিভারি"}</span>
-          <button
-            onClick={() => setLang(lang === "en" ? "bn" : "en")}
-            className="flex items-center gap-1.5 hover:bg-white/10 px-2 py-0.5 rounded transition"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            {lang === "en" ? "বাংলা" : "English"}
-          </button>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hover:bg-white/10 px-2 py-0.5 rounded transition text-xs opacity-80 hover:opacity-100">
+              {lang === "en" ? "Admin Panel" : "অ্যাডমিন প্যানেল"}
+            </Link>
+            <span className="opacity-40">|</span>
+            <button
+              onClick={() => setLang(lang === "en" ? "bn" : "en")}
+              className="flex items-center gap-1.5 hover:bg-white/10 px-2 py-0.5 rounded transition"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {lang === "en" ? "বাংলা" : "English"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -37,9 +43,9 @@ export function Header() {
       <div className="container mx-auto px-4 py-3 flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-primary)] grid place-items-center text-primary-foreground font-bold text-lg shadow-[var(--shadow-hover)]">
-            T
+            A
           </div>
-          <span className="font-bold text-xl tracking-tight hidden sm:inline">TrendMart</span>
+          <span className="font-bold text-xl tracking-tight hidden sm:inline">AITeShops</span>
         </Link>
 
         <form onSubmit={submitSearch} className="flex-1 max-w-2xl relative">
@@ -77,6 +83,9 @@ export function Header() {
           </Link>
           <Link to="/products" className="px-3 py-1.5 text-sm font-medium hover:text-primary [&.active]:text-primary">
             {t("nav.products")}
+          </Link>
+          <Link to="/shops" className="px-3 py-1.5 text-sm font-medium hover:text-primary [&.active]:text-primary">
+            {lang === "en" ? "🏪 Shops" : "🏪 শপ"}
           </Link>
           <span className="w-px h-4 bg-border mx-1 hidden sm:inline-block" />
           {categories.slice(0, 8).map((c) => (

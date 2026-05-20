@@ -9,13 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuperadminRouteImport } from './routes/superadmin'
+import { Route as ShopsRouteImport } from './routes/shops'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as OrderSuccessRouteImport } from './routes/order-success'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SuperadminIndexRouteImport } from './routes/superadmin/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as SuperadminShopsRouteImport } from './routes/superadmin/shops'
+import { Route as SuperadminCustomizationRouteImport } from './routes/superadmin/customization'
+import { Route as SuperadminCustomersRouteImport } from './routes/superadmin/customers'
+import { Route as SuperadminCategoriesRouteImport } from './routes/superadmin/categories'
+import { Route as SuperadminAdminsRouteImport } from './routes/superadmin/admins'
+import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminSellRouteImport } from './routes/admin/sell'
+import { Route as AdminProductsRouteImport } from './routes/admin/products'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
+import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as ShopSlugIndexRouteImport } from './routes/shop.$slug/index'
+import { Route as ShopSlugProductsRouteImport } from './routes/shop.$slug/products'
+import { Route as ShopSlugCheckoutRouteImport } from './routes/shop.$slug/checkout'
+import { Route as ShopSlugAboutRouteImport } from './routes/shop.$slug/about'
+import { Route as ShopSlugProductProductIdRouteImport } from './routes/shop.$slug/product.$productId'
 
+const SuperadminRoute = SuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopsRoute = ShopsRouteImport.update({
+  id: '/shops',
+  path: '/shops',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -24,6 +57,11 @@ const ProductsRoute = ProductsRouteImport.update({
 const OrderSuccessRoute = OrderSuccessRouteImport.update({
   id: '/order-success',
   path: '/order-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -36,9 +74,54 @@ const CartRoute = CartRouteImport.update({
   path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperadminIndexRoute = SuperadminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const SuperadminShopsRoute = SuperadminShopsRouteImport.update({
+  id: '/shops',
+  path: '/shops',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const SuperadminCustomizationRoute = SuperadminCustomizationRouteImport.update({
+  id: '/customization',
+  path: '/customization',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const SuperadminCustomersRoute = SuperadminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const SuperadminCategoriesRoute = SuperadminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const SuperadminAdminsRoute = SuperadminAdminsRouteImport.update({
+  id: '/admins',
+  path: '/admins',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const ShopSlugRoute = ShopSlugRouteImport.update({
+  id: '/shop/$slug',
+  path: '/shop/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
@@ -46,70 +129,277 @@ const ProductSlugRoute = ProductSlugRouteImport.update({
   path: '/product/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSellRoute = AdminSellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsRoute = AdminProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInventoryRoute = AdminInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ShopSlugIndexRoute = ShopSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugProductsRoute = ShopSlugProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugCheckoutRoute = ShopSlugCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugAboutRoute = ShopSlugAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugProductProductIdRoute =
+  ShopSlugProductProductIdRouteImport.update({
+    id: '/product/$productId',
+    path: '/product/$productId',
+    getParentRoute: () => ShopSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/login': typeof LoginRoute
   '/order-success': typeof OrderSuccessRoute
   '/products': typeof ProductsRoute
+  '/shops': typeof ShopsRoute
+  '/superadmin': typeof SuperadminRouteWithChildren
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/sell': typeof AdminSellRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/superadmin/admins': typeof SuperadminAdminsRoute
+  '/superadmin/categories': typeof SuperadminCategoriesRoute
+  '/superadmin/customers': typeof SuperadminCustomersRoute
+  '/superadmin/customization': typeof SuperadminCustomizationRoute
+  '/superadmin/shops': typeof SuperadminShopsRoute
+  '/admin/': typeof AdminIndexRoute
+  '/superadmin/': typeof SuperadminIndexRoute
+  '/shop/$slug/about': typeof ShopSlugAboutRoute
+  '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/products': typeof ShopSlugProductsRoute
+  '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/shop/$slug/product/$productId': typeof ShopSlugProductProductIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/login': typeof LoginRoute
   '/order-success': typeof OrderSuccessRoute
   '/products': typeof ProductsRoute
+  '/shops': typeof ShopsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/sell': typeof AdminSellRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/superadmin/admins': typeof SuperadminAdminsRoute
+  '/superadmin/categories': typeof SuperadminCategoriesRoute
+  '/superadmin/customers': typeof SuperadminCustomersRoute
+  '/superadmin/customization': typeof SuperadminCustomizationRoute
+  '/superadmin/shops': typeof SuperadminShopsRoute
+  '/admin': typeof AdminIndexRoute
+  '/superadmin': typeof SuperadminIndexRoute
+  '/shop/$slug/about': typeof ShopSlugAboutRoute
+  '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/products': typeof ShopSlugProductsRoute
+  '/shop/$slug': typeof ShopSlugIndexRoute
+  '/shop/$slug/product/$productId': typeof ShopSlugProductProductIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/login': typeof LoginRoute
   '/order-success': typeof OrderSuccessRoute
   '/products': typeof ProductsRoute
+  '/shops': typeof ShopsRoute
+  '/superadmin': typeof SuperadminRouteWithChildren
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/admin/sell': typeof AdminSellRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/superadmin/admins': typeof SuperadminAdminsRoute
+  '/superadmin/categories': typeof SuperadminCategoriesRoute
+  '/superadmin/customers': typeof SuperadminCustomersRoute
+  '/superadmin/customization': typeof SuperadminCustomizationRoute
+  '/superadmin/shops': typeof SuperadminShopsRoute
+  '/admin/': typeof AdminIndexRoute
+  '/superadmin/': typeof SuperadminIndexRoute
+  '/shop/$slug/about': typeof ShopSlugAboutRoute
+  '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/products': typeof ShopSlugProductsRoute
+  '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/shop/$slug/product/$productId': typeof ShopSlugProductProductIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/cart'
     | '/checkout'
+    | '/login'
     | '/order-success'
     | '/products'
+    | '/shops'
+    | '/superadmin'
+    | '/admin/customers'
+    | '/admin/inventory'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/sell'
+    | '/admin/settings'
     | '/product/$slug'
+    | '/shop/$slug'
+    | '/superadmin/admins'
+    | '/superadmin/categories'
+    | '/superadmin/customers'
+    | '/superadmin/customization'
+    | '/superadmin/shops'
+    | '/admin/'
+    | '/superadmin/'
+    | '/shop/$slug/about'
+    | '/shop/$slug/checkout'
+    | '/shop/$slug/products'
+    | '/shop/$slug/'
+    | '/shop/$slug/product/$productId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cart'
     | '/checkout'
+    | '/login'
     | '/order-success'
     | '/products'
+    | '/shops'
+    | '/admin/customers'
+    | '/admin/inventory'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/sell'
+    | '/admin/settings'
     | '/product/$slug'
+    | '/superadmin/admins'
+    | '/superadmin/categories'
+    | '/superadmin/customers'
+    | '/superadmin/customization'
+    | '/superadmin/shops'
+    | '/admin'
+    | '/superadmin'
+    | '/shop/$slug/about'
+    | '/shop/$slug/checkout'
+    | '/shop/$slug/products'
+    | '/shop/$slug'
+    | '/shop/$slug/product/$productId'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/cart'
     | '/checkout'
+    | '/login'
     | '/order-success'
     | '/products'
+    | '/shops'
+    | '/superadmin'
+    | '/admin/customers'
+    | '/admin/inventory'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/sell'
+    | '/admin/settings'
     | '/product/$slug'
+    | '/shop/$slug'
+    | '/superadmin/admins'
+    | '/superadmin/categories'
+    | '/superadmin/customers'
+    | '/superadmin/customization'
+    | '/superadmin/shops'
+    | '/admin/'
+    | '/superadmin/'
+    | '/shop/$slug/about'
+    | '/shop/$slug/checkout'
+    | '/shop/$slug/products'
+    | '/shop/$slug/'
+    | '/shop/$slug/product/$productId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  LoginRoute: typeof LoginRoute
   OrderSuccessRoute: typeof OrderSuccessRoute
   ProductsRoute: typeof ProductsRoute
+  ShopsRoute: typeof ShopsRoute
+  SuperadminRoute: typeof SuperadminRouteWithChildren
   ProductSlugRoute: typeof ProductSlugRoute
+  ShopSlugRoute: typeof ShopSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/superadmin': {
+      id: '/superadmin'
+      path: '/superadmin'
+      fullPath: '/superadmin'
+      preLoaderRoute: typeof SuperadminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shops': {
+      id: '/shops'
+      path: '/shops'
+      fullPath: '/shops'
+      preLoaderRoute: typeof ShopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products': {
       id: '/products'
       path: '/products'
@@ -122,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/order-success'
       fullPath: '/order-success'
       preLoaderRoute: typeof OrderSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -138,11 +435,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/superadmin/': {
+      id: '/superadmin/'
+      path: '/'
+      fullPath: '/superadmin/'
+      preLoaderRoute: typeof SuperadminIndexRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/superadmin/shops': {
+      id: '/superadmin/shops'
+      path: '/shops'
+      fullPath: '/superadmin/shops'
+      preLoaderRoute: typeof SuperadminShopsRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/superadmin/customization': {
+      id: '/superadmin/customization'
+      path: '/customization'
+      fullPath: '/superadmin/customization'
+      preLoaderRoute: typeof SuperadminCustomizationRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/superadmin/customers': {
+      id: '/superadmin/customers'
+      path: '/customers'
+      fullPath: '/superadmin/customers'
+      preLoaderRoute: typeof SuperadminCustomersRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/superadmin/categories': {
+      id: '/superadmin/categories'
+      path: '/categories'
+      fullPath: '/superadmin/categories'
+      preLoaderRoute: typeof SuperadminCategoriesRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/superadmin/admins': {
+      id: '/superadmin/admins'
+      path: '/admins'
+      fullPath: '/superadmin/admins'
+      preLoaderRoute: typeof SuperadminAdminsRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/shop/$slug': {
+      id: '/shop/$slug'
+      path: '/shop/$slug'
+      fullPath: '/shop/$slug'
+      preLoaderRoute: typeof ShopSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/product/$slug': {
@@ -152,17 +512,173 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sell': {
+      id: '/admin/sell'
+      path: '/sell'
+      fullPath: '/admin/sell'
+      preLoaderRoute: typeof AdminSellRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products': {
+      id: '/admin/products'
+      path: '/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/inventory': {
+      id: '/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AdminInventoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/shop/$slug/': {
+      id: '/shop/$slug/'
+      path: '/'
+      fullPath: '/shop/$slug/'
+      preLoaderRoute: typeof ShopSlugIndexRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/products': {
+      id: '/shop/$slug/products'
+      path: '/products'
+      fullPath: '/shop/$slug/products'
+      preLoaderRoute: typeof ShopSlugProductsRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/checkout': {
+      id: '/shop/$slug/checkout'
+      path: '/checkout'
+      fullPath: '/shop/$slug/checkout'
+      preLoaderRoute: typeof ShopSlugCheckoutRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/about': {
+      id: '/shop/$slug/about'
+      path: '/about'
+      fullPath: '/shop/$slug/about'
+      preLoaderRoute: typeof ShopSlugAboutRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/product/$productId': {
+      id: '/shop/$slug/product/$productId'
+      path: '/product/$productId'
+      fullPath: '/shop/$slug/product/$productId'
+      preLoaderRoute: typeof ShopSlugProductProductIdRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminProductsRoute: typeof AdminProductsRoute
+  AdminSellRoute: typeof AdminSellRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminInventoryRoute: AdminInventoryRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminProductsRoute: AdminProductsRoute,
+  AdminSellRoute: AdminSellRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface SuperadminRouteChildren {
+  SuperadminAdminsRoute: typeof SuperadminAdminsRoute
+  SuperadminCategoriesRoute: typeof SuperadminCategoriesRoute
+  SuperadminCustomersRoute: typeof SuperadminCustomersRoute
+  SuperadminCustomizationRoute: typeof SuperadminCustomizationRoute
+  SuperadminShopsRoute: typeof SuperadminShopsRoute
+  SuperadminIndexRoute: typeof SuperadminIndexRoute
+}
+
+const SuperadminRouteChildren: SuperadminRouteChildren = {
+  SuperadminAdminsRoute: SuperadminAdminsRoute,
+  SuperadminCategoriesRoute: SuperadminCategoriesRoute,
+  SuperadminCustomersRoute: SuperadminCustomersRoute,
+  SuperadminCustomizationRoute: SuperadminCustomizationRoute,
+  SuperadminShopsRoute: SuperadminShopsRoute,
+  SuperadminIndexRoute: SuperadminIndexRoute,
+}
+
+const SuperadminRouteWithChildren = SuperadminRoute._addFileChildren(
+  SuperadminRouteChildren,
+)
+
+interface ShopSlugRouteChildren {
+  ShopSlugAboutRoute: typeof ShopSlugAboutRoute
+  ShopSlugCheckoutRoute: typeof ShopSlugCheckoutRoute
+  ShopSlugProductsRoute: typeof ShopSlugProductsRoute
+  ShopSlugIndexRoute: typeof ShopSlugIndexRoute
+  ShopSlugProductProductIdRoute: typeof ShopSlugProductProductIdRoute
+}
+
+const ShopSlugRouteChildren: ShopSlugRouteChildren = {
+  ShopSlugAboutRoute: ShopSlugAboutRoute,
+  ShopSlugCheckoutRoute: ShopSlugCheckoutRoute,
+  ShopSlugProductsRoute: ShopSlugProductsRoute,
+  ShopSlugIndexRoute: ShopSlugIndexRoute,
+  ShopSlugProductProductIdRoute: ShopSlugProductProductIdRoute,
+}
+
+const ShopSlugRouteWithChildren = ShopSlugRoute._addFileChildren(
+  ShopSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  LoginRoute: LoginRoute,
   OrderSuccessRoute: OrderSuccessRoute,
   ProductsRoute: ProductsRoute,
+  ShopsRoute: ShopsRoute,
+  SuperadminRoute: SuperadminRouteWithChildren,
   ProductSlugRoute: ProductSlugRoute,
+  ShopSlugRoute: ShopSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

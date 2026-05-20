@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build:netlify"
+  publish = ".netlify/static"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[edge_functions]]
+  function = "server"
+  path = "/*"

@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,6 +12,10 @@ import {
 import appCss from "../styles.css?url";
 import { I18nProvider } from "@/lib/i18n";
 import { CartProvider } from "@/lib/cart";
+import { AuthProvider } from "@/lib/auth";
+import { AdminStoreProvider } from "@/lib/admin-store";
+import { CustomerStoreProvider } from "@/lib/customer-store";
+import { ShopCartProvider } from "@/lib/shop-cart";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 
@@ -53,9 +58,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TrendMart — Bangladesh's Everyday Online Marketplace" },
-      { name: "description", content: "Shop electronics, fashion, groceries, beauty and more at TrendMart. Cash on delivery across Bangladesh." },
-      { property: "og:title", content: "TrendMart — Bangladesh's Everyday Online Marketplace" },
+      { title: "AITeShops — Bangladesh's Everyday Online Marketplace" },
+      { name: "description", content: "Shop electronics, fashion, groceries, beauty and more at AITeShops. Cash on delivery across Bangladesh." },
+      { property: "og:title", content: "AITeShops — Bangladesh's Everyday Online Marketplace" },
       { property: "og:description", content: "Shop electronics, fashion, groceries, beauty and more. Cash on delivery across Bangladesh." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -84,17 +89,31 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: s => s.location.pathname });
+  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/superadmin') || pathname === '/login' || pathname.startsWith('/shop/');
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <CartProvider>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1"><Outlet /></main>
-            <Footer />
-          </div>
-        </CartProvider>
-      </I18nProvider>
+      <AuthProvider>
+        <AdminStoreProvider>
+          <CustomerStoreProvider>
+            <ShopCartProvider>
+          <I18nProvider>
+            <CartProvider>
+              {isAdminPath ? (
+                <Outlet />
+              ) : (
+                <div className="min-h-screen flex flex-col">
+                  <Header />
+                  <main className="flex-1"><Outlet /></main>
+                  <Footer />
+                </div>
+              )}
+            </CartProvider>
+          </I18nProvider>
+            </ShopCartProvider>
+          </CustomerStoreProvider>
+        </AdminStoreProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

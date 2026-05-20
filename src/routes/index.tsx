@@ -1,17 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Truck, ShieldCheck, RotateCcw, HeadphonesIcon, Flame, Star } from "lucide-react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { ArrowRight, Truck, ShieldCheck, RotateCcw, HeadphonesIcon, Flame, Star, Store } from "lucide-react";
 import heroImg from "@/assets/hero-banner.jpg";
 import promoElec from "@/assets/promo-electronics.jpg";
 import promoFashion from "@/assets/promo-fashion.jpg";
 import { useI18n } from "@/lib/i18n";
 import { categories, flashSaleProducts, bestSellers, newArrivals } from "@/lib/products";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { useAdminStore, ALL_CATEGORIES } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => { throw redirect({ to: '/login' }) },
   component: Home,
   head: () => ({
     meta: [
-      { title: "TrendMart — Shop Smarter, Save Bigger" },
+      { title: "AITeShops — Shop Smarter, Save Bigger" },
       { name: "description", content: "Bangladesh's friendly online marketplace. Electronics, fashion, groceries and more with cash on delivery." },
     ],
   }),
@@ -19,6 +21,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { t, lang } = useI18n();
+  const { shops } = useAdminStore();
+  const activeShops = shops.filter(s => s.status === 'active');
   const flash = flashSaleProducts();
   const best = bestSellers();
   const fresh = newArrivals();
@@ -39,7 +43,7 @@ function Home() {
             </h1>
             <p className="mt-5 text-muted-foreground text-lg max-w-lg">{t("hero.desc")}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link to="/products" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium hover:opacity-90 shadow-[var(--shadow-hover)]">
+              <Link to="/products" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium hover:opacity-90 shadow-(--shadow-hover)">
                 {t("hero.cta")} <ArrowRight className="w-4 h-4" />
               </Link>
               <a href="#categories" className="inline-flex items-center gap-2 bg-background border px-6 py-3 rounded-full font-medium hover:bg-secondary">
@@ -48,8 +52,8 @@ function Home() {
             </div>
           </div>
           <div className="relative">
-            <img src={heroImg} alt="Shopping at TrendMart" width={1600} height={800} className="rounded-2xl shadow-[var(--shadow-hover)] aspect-[4/3] object-cover" />
-            <div className="absolute -bottom-4 -left-4 bg-card border rounded-xl px-4 py-3 shadow-[var(--shadow-card)] flex items-center gap-3">
+            <img src={heroImg} alt="Shopping at AITeShops" width={1600} height={800} className="rounded-2xl shadow-(--shadow-hover) aspect-4/3 object-cover" />
+            <div className="absolute -bottom-4 -left-4 bg-card border rounded-xl px-4 py-3 shadow-(--shadow-card) flex items-center gap-3">
               <div className="bg-primary/10 text-primary p-2 rounded-lg"><Truck className="w-5 h-5" /></div>
               <div className="text-xs"><div className="font-semibold">{lang === "en" ? "Free Delivery" : "ফ্রি ডেলিভারি"}</div><div className="text-muted-foreground">{lang === "en" ? "Over ৳1500" : "৳১৫০০ এর বেশি"}</div></div>
             </div>
@@ -78,7 +82,7 @@ function Home() {
               search={{ cat: c.id, q: undefined } as never}
               className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary hover:bg-accent transition"
             >
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-background grid place-items-center text-3xl group-hover:scale-110 transition shadow-[var(--shadow-card)]">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-background grid place-items-center text-3xl group-hover:scale-110 transition shadow-(--shadow-card)">
                 {c.icon}
               </div>
               <span className="text-xs md:text-sm font-medium text-center">{c.name[lang]}</span>
@@ -134,13 +138,74 @@ function Home() {
         </div>
       </section>
 
+      {/* Browse Shops */}
+      {activeShops.length > 0 && (
+        <section className="container mx-auto px-4 py-14">
+          <div className="flex items-end justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 text-primary p-2 rounded-xl"><Store className="w-5 h-5" /></div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold">{lang === "en" ? "Browse Our Shops" : "আমাদের শপগুলো দেখুন"}</h2>
+                <p className="text-sm text-muted-foreground">{lang === "en" ? "Each shop has its own unique style & products" : "প্রতিটি শপের নিজস্ব স্টাইল ও পণ্য আছে"}</p>
+              </div>
+            </div>
+            <Link to="/shops" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+              {lang === "en" ? "View All" : "সব দেখুন"} <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {activeShops.map(shop => {
+              const cats = shop.allowedCategories.map(id => ALL_CATEGORIES.find(c => c.id === id)).filter(Boolean)
+              return (
+                <Link
+                  key={shop.id}
+                  to="/shop/$slug"
+                  params={{ slug: shop.slug }}
+                  className="group bg-card rounded-2xl overflow-hidden shadow-(--shadow-card) hover:shadow-(--shadow-hover) transition-all hover:-translate-y-1 border border-border"
+                >
+                  <div className="h-24 flex items-center justify-center relative" style={{ background: `linear-gradient(135deg, ${shop.theme.primaryColor}, ${shop.theme.accentColor})` }}>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto">
+                        <span className="text-white font-bold text-xl">{shop.name.charAt(0)}</span>
+                      </div>
+                    </div>
+                    <span className="absolute top-2 right-2 text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full">● Live</span>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-base group-hover:text-primary transition-colors">{shop.name}</h3>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0 mt-0.5" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{shop.description}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {cats.slice(0, 3).map(cat => cat && (
+                        <span key={cat.id} className="text-[11px] px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: shop.theme.primaryColor }}>
+                          {cat.icon} {lang === "en" ? cat.name : cat.nameBn}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs text-muted-foreground">
+                      <span>{shop.stats.products} {lang === "en" ? "products" : "পণ্য"}</span>
+                      <span>{shop.stats.customers.toLocaleString()} {lang === "en" ? "customers" : "গ্রাহক"}</span>
+                      <span className="ml-auto font-semibold" style={{ color: shop.theme.primaryColor }}>
+                        {lang === "en" ? "Visit →" : "দেখুন →"}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Reviews */}
       <section className="bg-secondary py-14">
         <div className="container mx-auto px-4">
           <SectionTitle title={t("section.reviews")} />
           <div className="grid md:grid-cols-3 gap-5">
             {reviews(lang).map((r, i) => (
-              <div key={i} className="bg-card p-6 rounded-2xl shadow-[var(--shadow-card)]">
+              <div key={i} className="bg-card p-6 rounded-2xl shadow-(--shadow-card)">
                 <div className="flex gap-0.5 mb-3">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}</div>
                 <p className="text-sm leading-relaxed mb-4">"{r.text}"</p>
                 <div className="flex items-center gap-3">

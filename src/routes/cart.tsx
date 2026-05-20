@@ -6,7 +6,7 @@ import { useI18n, formatBDT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
-  head: () => ({ meta: [{ title: "Your Cart — TrendMart" }] }),
+  head: () => ({ meta: [{ title: "Your Cart — AITeShops" }] }),
 });
 
 function CartPage() {

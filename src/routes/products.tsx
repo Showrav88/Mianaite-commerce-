@@ -16,8 +16,8 @@ export const Route = createFileRoute("/products")({
   component: ProductsPage,
   head: () => ({
     meta: [
-      { title: "All Products — TrendMart" },
-      { name: "description", content: "Browse all products at TrendMart. Filter by category, price, and more." },
+      { title: "All Products — AITeShops" },
+      { name: "description", content: "Browse all products at AITeShops. Filter by category, price, and more." },
     ],
   }),
 });

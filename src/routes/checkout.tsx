@@ -7,7 +7,7 @@ import { useI18n, formatBDT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
-  head: () => ({ meta: [{ title: "Checkout — TrendMart" }] }),
+  head: () => ({ meta: [{ title: "Checkout — AITeShops" }] }),
 });
 
 const schema = z.object({

@@ -9,8 +9,8 @@ export function Footer() {
       <div className="container mx-auto px-4 py-14 grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-primary)] grid place-items-center text-primary-foreground font-bold">T</div>
-            <span className="font-bold text-xl">TrendMart</span>
+            <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-primary)] grid place-items-center text-primary-foreground font-bold">A</div>
+            <span className="font-bold text-xl">AITeShops</span>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">{t("footer.aboutDesc")}</p>
           <div className="flex gap-2 mt-4">
@@ -54,7 +54,7 @@ export function Footer() {
       </div>
       <div className="border-t">
         <div className="container mx-auto px-4 py-4 text-xs text-muted-foreground flex flex-wrap justify-between gap-2">
-          <span>© {new Date().getFullYear()} TrendMart. {t("footer.rights")}</span>
+          <span>© {new Date().getFullYear()} AITeShops. {t("footer.rights")}</span>
           <span>Made with ❤️ in Bangladesh</span>
         </div>
       </div>
