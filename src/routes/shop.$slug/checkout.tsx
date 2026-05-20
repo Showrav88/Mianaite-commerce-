@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ShoppingCart, Trash2, MapPin, Phone, User, CheckCircle, Package } from 'lucide-react'
 import { useState } from 'react'
-import { useAdminStore, fmt } from '@/lib/admin-store'
+import { useAdminStore, fmt, type Order } from '@/lib/admin-store'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
 import { useCustomerStore } from '@/lib/customer-store'
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/shop/$slug/checkout')({
 
 function ShopCheckoutPage() {
   const { slug } = Route.useParams()
-  const { shops } = useAdminStore()
+  const { shops, orders, setOrders } = useAdminStore()
   const { items, removeItem, updateQty, clear, total, count } = useShopCart()
   const { lang } = useI18n()
   const { currentCustomer, registerCustomer, placeCustomerOrder } = useCustomerStore()
@@ -51,6 +51,20 @@ const [authOpen, setAuthOpen] = useState(false)
       total,
       address: address.trim(),
     })
+    const adminOrder: Order = {
+      id: order.id,
+      orderNumber: 'ORD-' + Date.now().toString().slice(-6),
+      shopId: shop.id,
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      customerAddress: address.trim(),
+      items: shopItems.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+      subtotal: total,
+      status: 'pending',
+      paymentMethod: 'cod',
+      createdAt: new Date().toISOString(),
+    }
+    setOrders([adminOrder, ...orders])
     setOrderId(order.id)
     clear()
     setStep('success')
