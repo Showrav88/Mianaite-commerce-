@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ShoppingCart, SlidersHorizontal } from 'lucide-react'
-import { useState } from 'react'
 import { z } from 'zod'
 import { useAdminStore, ALL_CATEGORIES, SUBCATEGORIES_BY_CATEGORY, fmt, effectivePrice, discountBadgeText, hasProductDiscount } from '@/lib/admin-store'
 import { useShopCart } from '@/lib/shop-cart'
@@ -26,6 +25,8 @@ function ShopProductsPage() {
   const [conflictProduct, setConflictProduct] = useState<any>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
   const [localSearch, setLocalSearch] = useState('')
+  const [tappedId, setTappedId] = useState<string | null>(null)
+  const touchStartY = useRef(0)
 
   const shop = shops.find(s => s.slug === slug)!
   const cats = shop.allowedCategories.map(id => ALL_CATEGORIES.find(c => c.id === id)).filter(Boolean)
@@ -145,10 +146,17 @@ function ShopProductsPage() {
             const salePrice = effectivePrice(product)
             const discLabel = discountBadgeText(product, lang)
             return (
-              <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
+              <div
+                key={product.id}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group"
+                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; setTappedId(product.id) }}
+                onTouchMove={(e) => { if (Math.abs(e.touches[0].clientY - touchStartY.current) > 8) setTappedId(null) }}
+                onTouchEnd={() => setTimeout(() => setTappedId(null), 250)}
+                onTouchCancel={() => setTappedId(null)}
+              >
                 <Link to="/shop/$slug/product/$productId" params={{ slug, productId: product.id }} className="block">
                   <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                    <img src={product.image} alt={product.name} draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' } as React.CSSProperties} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300 select-none pointer-events-none" />
+                    <img src={product.image} alt={product.name} draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' } as React.CSSProperties} className={`w-full h-full object-contain p-2 transition-transform duration-300 select-none pointer-events-none group-hover:scale-105 ${tappedId === product.id ? 'scale-105' : ''}`} />
                     {isOut && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="text-white text-[10px] font-medium bg-black/50 px-2 py-0.5 rounded-full">

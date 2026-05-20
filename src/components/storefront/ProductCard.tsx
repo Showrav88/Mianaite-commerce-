@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart, Star } from "lucide-react";
 import { useI18n, formatBDT } from "@/lib/i18n";
@@ -10,9 +10,26 @@ export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const disc = discountPercent(product);
   const outOfStock = product.stock <= 0;
+  const [tapped, setTapped] = useState(false);
+  const startY = useRef(0);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+    setTapped(true);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (Math.abs(e.touches[0].clientY - startY.current) > 8) setTapped(false);
+  };
+  const onTouchEnd = () => setTimeout(() => setTapped(false), 250);
 
   return (
-    <div className="group bg-card rounded-xl overflow-hidden border border-transparent hover:border-primary/20 hover:shadow-(--shadow-hover) transition-all duration-300">
+    <div
+      className="group bg-card rounded-xl overflow-hidden border border-transparent hover:border-primary/20 hover:shadow-(--shadow-hover) transition-all duration-300"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={() => setTapped(false)}
+    >
       <Link to="/product/$slug" params={{ slug: product.slug }} className="block relative aspect-square bg-secondary overflow-hidden">
         <img
           src={product.images[0]}
@@ -21,7 +38,7 @@ export function ProductCard({ product }: { product: Product }) {
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none pointer-events-none"
+          className={`w-full h-full object-cover transition-transform duration-300 select-none pointer-events-none group-hover:scale-105 ${tapped ? 'scale-105' : ''}`}
         />
         {disc > 0 && (
           <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[11px] font-bold px-2 py-0.5 rounded">
