@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart, Star } from "lucide-react";
 import { useI18n, formatBDT } from "@/lib/i18n";
@@ -10,17 +10,20 @@ export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const disc = discountPercent(product);
   const outOfStock = product.stock <= 0;
-  const [tapped, setTapped] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   const startY = useRef(0);
+
+  const zoomIn = () => { if (imgRef.current) imgRef.current.style.transform = 'scale(1.05)'; };
+  const zoomOut = () => { if (imgRef.current) imgRef.current.style.transform = ''; };
 
   const onTouchStart = (e: React.TouchEvent) => {
     startY.current = e.touches[0].clientY;
-    setTapped(true);
+    zoomIn();
   };
   const onTouchMove = (e: React.TouchEvent) => {
-    if (Math.abs(e.touches[0].clientY - startY.current) > 8) setTapped(false);
+    if (Math.abs(e.touches[0].clientY - startY.current) > 8) zoomOut();
   };
-  const onTouchEnd = () => setTimeout(() => setTapped(false), 250);
+  const onTouchEnd = () => setTimeout(zoomOut, 250);
 
   return (
     <div
@@ -28,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      onTouchCancel={() => setTapped(false)}
+      onTouchCancel={zoomOut}
     >
       <Link to="/product/$slug" params={{ slug: product.slug }} className="block relative aspect-square bg-secondary overflow-hidden">
         <img
@@ -38,7 +41,8 @@ export function ProductCard({ product }: { product: Product }) {
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
-          className={`w-full h-full object-cover transition-transform duration-300 select-none pointer-events-none group-hover:scale-105 ${tapped ? 'scale-105' : ''}`}
+          ref={imgRef}
+          className="w-full h-full object-cover transition-transform duration-300 select-none pointer-events-none group-hover:scale-105"
         />
         {disc > 0 && (
           <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[11px] font-bold px-2 py-0.5 rounded">

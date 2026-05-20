@@ -25,7 +25,6 @@ function ShopProductsPage() {
   const [conflictProduct, setConflictProduct] = useState<any>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
   const [localSearch, setLocalSearch] = useState('')
-  const [tappedId, setTappedId] = useState<string | null>(null)
   const touchStartY = useRef(0)
 
   const shop = shops.find(s => s.slug === slug)!
@@ -149,14 +148,14 @@ function ShopProductsPage() {
               <div
                 key={product.id}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group"
-                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; setTappedId(product.id) }}
-                onTouchMove={(e) => { if (Math.abs(e.touches[0].clientY - touchStartY.current) > 8) setTappedId(null) }}
-                onTouchEnd={() => setTimeout(() => setTappedId(null), 250)}
-                onTouchCancel={() => setTappedId(null)}
+                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; const img = e.currentTarget.querySelector('img') as HTMLElement | null; if (img) img.style.transform = 'scale(1.05)'; }}
+                onTouchMove={(e) => { if (Math.abs(e.touches[0].clientY - touchStartY.current) > 8) { const img = e.currentTarget.querySelector('img') as HTMLElement | null; if (img) img.style.transform = ''; } }}
+                onTouchEnd={(e) => { const img = e.currentTarget.querySelector('img') as HTMLElement | null; setTimeout(() => { if (img) img.style.transform = ''; }, 250); }}
+                onTouchCancel={(e) => { const img = e.currentTarget.querySelector('img') as HTMLElement | null; if (img) img.style.transform = ''; }}
               >
                 <Link to="/shop/$slug/product/$productId" params={{ slug, productId: product.id }} className="block">
                   <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                    <img src={product.image} alt={product.name} draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' } as React.CSSProperties} className={`w-full h-full object-contain p-2 transition-transform duration-300 select-none pointer-events-none group-hover:scale-105 ${tappedId === product.id ? 'scale-105' : ''}`} />
+                    <img src={product.image} alt={product.name} draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none' } as React.CSSProperties} className="w-full h-full object-contain p-2 transition-transform duration-300 select-none pointer-events-none group-hover:scale-105" />
                     {isOut && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="text-white text-[10px] font-medium bg-black/50 px-2 py-0.5 rounded-full">
