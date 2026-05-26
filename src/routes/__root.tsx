@@ -18,6 +18,8 @@ import { CustomerStoreProvider } from "@/lib/customer-store";
 import { ShopCartProvider } from "@/lib/shop-cart";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
+import { MarketStoreProvider } from "@/lib/market-store";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -102,11 +104,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: s => s.location.pathname });
-  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/superadmin') || pathname === '/login' || pathname.startsWith('/shop/');
+  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/superadmin') || pathname === '/login' || pathname.startsWith('/shop/') || pathname.startsWith('/counter');
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AdminStoreProvider>
+          <MarketStoreProvider>
           <CustomerStoreProvider>
             <ShopCartProvider>
           <I18nProvider>
@@ -120,10 +123,12 @@ function RootComponent() {
                   <Footer />
                 </div>
               )}
+              <Toaster richColors position="top-right" />
             </CartProvider>
           </I18nProvider>
             </ShopCartProvider>
           </CustomerStoreProvider>
+          </MarketStoreProvider>
         </AdminStoreProvider>
       </AuthProvider>
     </QueryClientProvider>

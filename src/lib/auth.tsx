@@ -31,12 +31,15 @@ function readStorage(): AuthUser | null {
   }
 }
 
+export const DEMO_PASSWORD = '1234567@'
+
 export const DEMO_ACCOUNTS: AuthUser[] = [
-  { id: 'sa_1', name: 'Super Admin', email: 'superadmin@aiteshops.com', role: 'super_admin' },
-  { id: 'adm_1', name: 'Rahim Tech', email: 'rahim@techhub.bd', role: 'shop_admin', shopId: 'shop_1', shopName: 'TechHub BD' },
-  { id: 'adm_2', name: 'Fatema Fashion', email: 'fatema@fashionista.bd', role: 'shop_admin', shopId: 'shop_2', shopName: 'Fashionista BD' },
-  { id: 'adm_3', name: 'Karim Groceries', email: 'karim@freshmart.bd', role: 'shop_admin', shopId: 'shop_3', shopName: 'FreshMart' },
-  { id: 'adm_5', name: 'Sohag', email: 'Sohag.moodon@gmail.com', role: 'shop_admin', shopId: 'shop_5', shopName: 'Mood On' },
+  { id: 'sa_1', name: 'Super Admin', email: 'superadmin@gmail.com', role: 'super_admin' },
+  { id: 'adm_6', name: '1to99 Market', email: 'admin.1to99@gmail.com', role: 'shop_admin', shopId: 'shop_6', shopName: '1to99 Market' },
+  { id: 'adm_1', name: 'Rahim Tech', email: 'rahim.techhub@gmail.com', role: 'shop_admin', shopId: 'shop_1', shopName: 'TechHub BD' },
+  { id: 'adm_2', name: 'Fatema Fashion', email: 'fatema.fashionista@gmail.com', role: 'shop_admin', shopId: 'shop_2', shopName: 'Fashionista BD' },
+  { id: 'adm_3', name: 'Karim Groceries', email: 'karim.freshmart@gmail.com', role: 'shop_admin', shopId: 'shop_3', shopName: 'FreshMart' },
+  { id: 'adm_5', name: 'Sohag', email: 'sohag.moodon@gmail.com', role: 'shop_admin', shopId: 'shop_5', shopName: 'Mood On' },
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {

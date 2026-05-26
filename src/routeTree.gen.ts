@@ -14,11 +14,13 @@ import { Route as ShopsRouteImport } from './routes/shops'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as OrderSuccessRouteImport } from './routes/order-success'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CounterRouteImport } from './routes/counter'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperadminIndexRouteImport } from './routes/superadmin/index'
+import { Route as CounterIndexRouteImport } from './routes/counter/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SuperadminShopsRouteImport } from './routes/superadmin/shops'
 import { Route as SuperadminCustomizationRouteImport } from './routes/superadmin/customization'
@@ -27,17 +29,24 @@ import { Route as SuperadminCategoriesRouteImport } from './routes/superadmin/ca
 import { Route as SuperadminAdminsRouteImport } from './routes/superadmin/admins'
 import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as CounterShiftsRouteImport } from './routes/counter/shifts'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSellRouteImport } from './routes/admin/sell'
+import { Route as AdminReturnsRouteImport } from './routes/admin/returns'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminLabelsRouteImport } from './routes/admin/labels'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
 import { Route as ShopSlugIndexRouteImport } from './routes/shop.$slug/index'
 import { Route as ShopSlugProductsRouteImport } from './routes/shop.$slug/products'
+import { Route as ShopSlugDealsRouteImport } from './routes/shop.$slug/deals'
 import { Route as ShopSlugCheckoutRouteImport } from './routes/shop.$slug/checkout'
 import { Route as ShopSlugAboutRouteImport } from './routes/shop.$slug/about'
+import { Route as AdminCatalogProductsRouteImport } from './routes/admin/catalog/products'
+import { Route as AdminCatalogCategoriesRouteImport } from './routes/admin/catalog/categories'
 import { Route as ShopSlugProductProductIdRouteImport } from './routes/shop.$slug/product.$productId'
+import { Route as AdminCatalogProductsIdRouteImport } from './routes/admin/catalog/products_.$id'
 
 const SuperadminRoute = SuperadminRouteImport.update({
   id: '/superadmin',
@@ -64,6 +73,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CounterRoute = CounterRouteImport.update({
+  id: '/counter',
+  path: '/counter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -88,6 +102,11 @@ const SuperadminIndexRoute = SuperadminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SuperadminRoute,
+} as any)
+const CounterIndexRoute = CounterIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CounterRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -129,6 +148,11 @@ const ProductSlugRoute = ProductSlugRouteImport.update({
   path: '/product/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CounterShiftsRoute = CounterShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
+  getParentRoute: () => CounterRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -139,6 +163,11 @@ const AdminSellRoute = AdminSellRouteImport.update({
   path: '/sell',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReturnsRoute = AdminReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -147,6 +176,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLabelsRoute = AdminLabelsRouteImport.update({
+  id: '/labels',
+  path: '/labels',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInventoryRoute = AdminInventoryRouteImport.update({
@@ -169,6 +203,11 @@ const ShopSlugProductsRoute = ShopSlugProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => ShopSlugRoute,
 } as any)
+const ShopSlugDealsRoute = ShopSlugDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
 const ShopSlugCheckoutRoute = ShopSlugCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -179,18 +218,34 @@ const ShopSlugAboutRoute = ShopSlugAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => ShopSlugRoute,
 } as any)
+const AdminCatalogProductsRoute = AdminCatalogProductsRouteImport.update({
+  id: '/catalog/products',
+  path: '/catalog/products',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCatalogCategoriesRoute = AdminCatalogCategoriesRouteImport.update({
+  id: '/catalog/categories',
+  path: '/catalog/categories',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ShopSlugProductProductIdRoute =
   ShopSlugProductProductIdRouteImport.update({
     id: '/product/$productId',
     path: '/product/$productId',
     getParentRoute: () => ShopSlugRoute,
   } as any)
+const AdminCatalogProductsIdRoute = AdminCatalogProductsIdRouteImport.update({
+  id: '/catalog/products_/$id',
+  path: '/catalog/products/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/counter': typeof CounterRouteWithChildren
   '/login': typeof LoginRoute
   '/order-success': typeof OrderSuccessRoute
   '/products': typeof ProductsRoute
@@ -198,10 +253,13 @@ export interface FileRoutesByFullPath {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/labels': typeof AdminLabelsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/returns': typeof AdminReturnsRoute
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/counter/shifts': typeof CounterShiftsRoute
   '/product/$slug': typeof ProductSlugRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
   '/superadmin/admins': typeof SuperadminAdminsRoute
@@ -210,11 +268,16 @@ export interface FileRoutesByFullPath {
   '/superadmin/customization': typeof SuperadminCustomizationRoute
   '/superadmin/shops': typeof SuperadminShopsRoute
   '/admin/': typeof AdminIndexRoute
+  '/counter/': typeof CounterIndexRoute
   '/superadmin/': typeof SuperadminIndexRoute
+  '/admin/catalog/categories': typeof AdminCatalogCategoriesRoute
+  '/admin/catalog/products': typeof AdminCatalogProductsRoute
   '/shop/$slug/about': typeof ShopSlugAboutRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/products': typeof ShopSlugProductsRoute
   '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/admin/catalog/products/$id': typeof AdminCatalogProductsIdRoute
   '/shop/$slug/product/$productId': typeof ShopSlugProductProductIdRoute
 }
 export interface FileRoutesByTo {
@@ -227,10 +290,13 @@ export interface FileRoutesByTo {
   '/shops': typeof ShopsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/labels': typeof AdminLabelsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/returns': typeof AdminReturnsRoute
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/counter/shifts': typeof CounterShiftsRoute
   '/product/$slug': typeof ProductSlugRoute
   '/superadmin/admins': typeof SuperadminAdminsRoute
   '/superadmin/categories': typeof SuperadminCategoriesRoute
@@ -238,11 +304,16 @@ export interface FileRoutesByTo {
   '/superadmin/customization': typeof SuperadminCustomizationRoute
   '/superadmin/shops': typeof SuperadminShopsRoute
   '/admin': typeof AdminIndexRoute
+  '/counter': typeof CounterIndexRoute
   '/superadmin': typeof SuperadminIndexRoute
+  '/admin/catalog/categories': typeof AdminCatalogCategoriesRoute
+  '/admin/catalog/products': typeof AdminCatalogProductsRoute
   '/shop/$slug/about': typeof ShopSlugAboutRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/products': typeof ShopSlugProductsRoute
   '/shop/$slug': typeof ShopSlugIndexRoute
+  '/admin/catalog/products/$id': typeof AdminCatalogProductsIdRoute
   '/shop/$slug/product/$productId': typeof ShopSlugProductProductIdRoute
 }
 export interface FileRoutesById {
@@ -251,6 +322,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/counter': typeof CounterRouteWithChildren
   '/login': typeof LoginRoute
   '/order-success': typeof OrderSuccessRoute
   '/products': typeof ProductsRoute
@@ -258,10 +330,13 @@ export interface FileRoutesById {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/labels': typeof AdminLabelsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/returns': typeof AdminReturnsRoute
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/counter/shifts': typeof CounterShiftsRoute
   '/product/$slug': typeof ProductSlugRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
   '/superadmin/admins': typeof SuperadminAdminsRoute
@@ -270,11 +345,16 @@ export interface FileRoutesById {
   '/superadmin/customization': typeof SuperadminCustomizationRoute
   '/superadmin/shops': typeof SuperadminShopsRoute
   '/admin/': typeof AdminIndexRoute
+  '/counter/': typeof CounterIndexRoute
   '/superadmin/': typeof SuperadminIndexRoute
+  '/admin/catalog/categories': typeof AdminCatalogCategoriesRoute
+  '/admin/catalog/products': typeof AdminCatalogProductsRoute
   '/shop/$slug/about': typeof ShopSlugAboutRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/products': typeof ShopSlugProductsRoute
   '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/admin/catalog/products_/$id': typeof AdminCatalogProductsIdRoute
   '/shop/$slug/product/$productId': typeof ShopSlugProductProductIdRoute
 }
 export interface FileRouteTypes {
@@ -284,6 +364,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/checkout'
+    | '/counter'
     | '/login'
     | '/order-success'
     | '/products'
@@ -291,10 +372,13 @@ export interface FileRouteTypes {
     | '/superadmin'
     | '/admin/customers'
     | '/admin/inventory'
+    | '/admin/labels'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/returns'
     | '/admin/sell'
     | '/admin/settings'
+    | '/counter/shifts'
     | '/product/$slug'
     | '/shop/$slug'
     | '/superadmin/admins'
@@ -303,11 +387,16 @@ export interface FileRouteTypes {
     | '/superadmin/customization'
     | '/superadmin/shops'
     | '/admin/'
+    | '/counter/'
     | '/superadmin/'
+    | '/admin/catalog/categories'
+    | '/admin/catalog/products'
     | '/shop/$slug/about'
     | '/shop/$slug/checkout'
+    | '/shop/$slug/deals'
     | '/shop/$slug/products'
     | '/shop/$slug/'
+    | '/admin/catalog/products/$id'
     | '/shop/$slug/product/$productId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -320,10 +409,13 @@ export interface FileRouteTypes {
     | '/shops'
     | '/admin/customers'
     | '/admin/inventory'
+    | '/admin/labels'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/returns'
     | '/admin/sell'
     | '/admin/settings'
+    | '/counter/shifts'
     | '/product/$slug'
     | '/superadmin/admins'
     | '/superadmin/categories'
@@ -331,11 +423,16 @@ export interface FileRouteTypes {
     | '/superadmin/customization'
     | '/superadmin/shops'
     | '/admin'
+    | '/counter'
     | '/superadmin'
+    | '/admin/catalog/categories'
+    | '/admin/catalog/products'
     | '/shop/$slug/about'
     | '/shop/$slug/checkout'
+    | '/shop/$slug/deals'
     | '/shop/$slug/products'
     | '/shop/$slug'
+    | '/admin/catalog/products/$id'
     | '/shop/$slug/product/$productId'
   id:
     | '__root__'
@@ -343,6 +440,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/checkout'
+    | '/counter'
     | '/login'
     | '/order-success'
     | '/products'
@@ -350,10 +448,13 @@ export interface FileRouteTypes {
     | '/superadmin'
     | '/admin/customers'
     | '/admin/inventory'
+    | '/admin/labels'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/returns'
     | '/admin/sell'
     | '/admin/settings'
+    | '/counter/shifts'
     | '/product/$slug'
     | '/shop/$slug'
     | '/superadmin/admins'
@@ -362,11 +463,16 @@ export interface FileRouteTypes {
     | '/superadmin/customization'
     | '/superadmin/shops'
     | '/admin/'
+    | '/counter/'
     | '/superadmin/'
+    | '/admin/catalog/categories'
+    | '/admin/catalog/products'
     | '/shop/$slug/about'
     | '/shop/$slug/checkout'
+    | '/shop/$slug/deals'
     | '/shop/$slug/products'
     | '/shop/$slug/'
+    | '/admin/catalog/products_/$id'
     | '/shop/$slug/product/$productId'
   fileRoutesById: FileRoutesById
 }
@@ -375,6 +481,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  CounterRoute: typeof CounterRouteWithChildren
   LoginRoute: typeof LoginRoute
   OrderSuccessRoute: typeof OrderSuccessRoute
   ProductsRoute: typeof ProductsRoute
@@ -421,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/counter': {
+      id: '/counter'
+      path: '/counter'
+      fullPath: '/counter'
+      preLoaderRoute: typeof CounterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout': {
       id: '/checkout'
       path: '/checkout'
@@ -455,6 +569,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/superadmin/'
       preLoaderRoute: typeof SuperadminIndexRouteImport
       parentRoute: typeof SuperadminRoute
+    }
+    '/counter/': {
+      id: '/counter/'
+      path: '/'
+      fullPath: '/counter/'
+      preLoaderRoute: typeof CounterIndexRouteImport
+      parentRoute: typeof CounterRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -512,6 +633,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/counter/shifts': {
+      id: '/counter/shifts'
+      path: '/shifts'
+      fullPath: '/counter/shifts'
+      preLoaderRoute: typeof CounterShiftsRouteImport
+      parentRoute: typeof CounterRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -526,6 +654,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSellRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/returns': {
+      id: '/admin/returns'
+      path: '/returns'
+      fullPath: '/admin/returns'
+      preLoaderRoute: typeof AdminReturnsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/products': {
       id: '/admin/products'
       path: '/products'
@@ -538,6 +673,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/admin/orders'
       preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/labels': {
+      id: '/admin/labels'
+      path: '/labels'
+      fullPath: '/admin/labels'
+      preLoaderRoute: typeof AdminLabelsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/inventory': {
@@ -568,6 +710,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopSlugProductsRouteImport
       parentRoute: typeof ShopSlugRoute
     }
+    '/shop/$slug/deals': {
+      id: '/shop/$slug/deals'
+      path: '/deals'
+      fullPath: '/shop/$slug/deals'
+      preLoaderRoute: typeof ShopSlugDealsRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
     '/shop/$slug/checkout': {
       id: '/shop/$slug/checkout'
       path: '/checkout'
@@ -582,6 +731,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopSlugAboutRouteImport
       parentRoute: typeof ShopSlugRoute
     }
+    '/admin/catalog/products': {
+      id: '/admin/catalog/products'
+      path: '/catalog/products'
+      fullPath: '/admin/catalog/products'
+      preLoaderRoute: typeof AdminCatalogProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/catalog/categories': {
+      id: '/admin/catalog/categories'
+      path: '/catalog/categories'
+      fullPath: '/admin/catalog/categories'
+      preLoaderRoute: typeof AdminCatalogCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/shop/$slug/product/$productId': {
       id: '/shop/$slug/product/$productId'
       path: '/product/$productId'
@@ -589,30 +752,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopSlugProductProductIdRouteImport
       parentRoute: typeof ShopSlugRoute
     }
+    '/admin/catalog/products_/$id': {
+      id: '/admin/catalog/products_/$id'
+      path: '/catalog/products/$id'
+      fullPath: '/admin/catalog/products/$id'
+      preLoaderRoute: typeof AdminCatalogProductsIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminLabelsRoute: typeof AdminLabelsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminProductsRoute: typeof AdminProductsRoute
+  AdminReturnsRoute: typeof AdminReturnsRoute
   AdminSellRoute: typeof AdminSellRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCatalogCategoriesRoute: typeof AdminCatalogCategoriesRoute
+  AdminCatalogProductsRoute: typeof AdminCatalogProductsRoute
+  AdminCatalogProductsIdRoute: typeof AdminCatalogProductsIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminInventoryRoute: AdminInventoryRoute,
+  AdminLabelsRoute: AdminLabelsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminProductsRoute: AdminProductsRoute,
+  AdminReturnsRoute: AdminReturnsRoute,
   AdminSellRoute: AdminSellRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminCatalogCategoriesRoute: AdminCatalogCategoriesRoute,
+  AdminCatalogProductsRoute: AdminCatalogProductsRoute,
+  AdminCatalogProductsIdRoute: AdminCatalogProductsIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface CounterRouteChildren {
+  CounterShiftsRoute: typeof CounterShiftsRoute
+  CounterIndexRoute: typeof CounterIndexRoute
+}
+
+const CounterRouteChildren: CounterRouteChildren = {
+  CounterShiftsRoute: CounterShiftsRoute,
+  CounterIndexRoute: CounterIndexRoute,
+}
+
+const CounterRouteWithChildren =
+  CounterRoute._addFileChildren(CounterRouteChildren)
 
 interface SuperadminRouteChildren {
   SuperadminAdminsRoute: typeof SuperadminAdminsRoute
@@ -639,6 +832,7 @@ const SuperadminRouteWithChildren = SuperadminRoute._addFileChildren(
 interface ShopSlugRouteChildren {
   ShopSlugAboutRoute: typeof ShopSlugAboutRoute
   ShopSlugCheckoutRoute: typeof ShopSlugCheckoutRoute
+  ShopSlugDealsRoute: typeof ShopSlugDealsRoute
   ShopSlugProductsRoute: typeof ShopSlugProductsRoute
   ShopSlugIndexRoute: typeof ShopSlugIndexRoute
   ShopSlugProductProductIdRoute: typeof ShopSlugProductProductIdRoute
@@ -647,6 +841,7 @@ interface ShopSlugRouteChildren {
 const ShopSlugRouteChildren: ShopSlugRouteChildren = {
   ShopSlugAboutRoute: ShopSlugAboutRoute,
   ShopSlugCheckoutRoute: ShopSlugCheckoutRoute,
+  ShopSlugDealsRoute: ShopSlugDealsRoute,
   ShopSlugProductsRoute: ShopSlugProductsRoute,
   ShopSlugIndexRoute: ShopSlugIndexRoute,
   ShopSlugProductProductIdRoute: ShopSlugProductProductIdRoute,
@@ -661,6 +856,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  CounterRoute: CounterRouteWithChildren,
   LoginRoute: LoginRoute,
   OrderSuccessRoute: OrderSuccessRoute,
   ProductsRoute: ProductsRoute,

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState } from '@tanstack/react-router'
 import { ShoppingCart, Search, Store, Globe, User, X, Menu, ChevronRight, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAdminStore, SUBCATEGORIES_BY_CATEGORY } from '@/lib/admin-store'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
@@ -24,6 +24,54 @@ function ShopLayout() {
   const pathname = useRouterState({ select: s => s.location.pathname })
 
   const shop = shops.find(s => s.slug === slug)
+
+  useEffect(() => {
+    if (!shop) return
+
+    const manifest = {
+      name: shop.name,
+      short_name: shop.name.split(' ')[0],
+      description: shop.description || shop.name,
+      start_url: `/shop/${shop.slug}`,
+      scope: `/shop/${shop.slug}`,
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: shop.theme.primaryColor,
+      orientation: 'portrait-primary',
+      icons: shop.logo
+        ? [
+            { src: shop.logo, sizes: '192x192',  type: shop.logo.endsWith('.png') ? 'image/png' : 'image/jpeg', purpose: 'any' },
+            { src: shop.logo, sizes: '512x512',  type: shop.logo.endsWith('.png') ? 'image/png' : 'image/jpeg', purpose: 'any maskable' },
+          ]
+        : [
+            { src: '/shops/ait-logo.png', sizes: '192x192',  type: 'image/png', purpose: 'any' },
+            { src: '/shops/ait-logo.png', sizes: '512x512',  type: 'image/png', purpose: 'any maskable' },
+          ],
+    }
+
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })
+    const blobUrl = URL.createObjectURL(blob)
+
+    let link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
+    const prevHref = link?.href ?? '/manifest.json'
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = 'manifest'
+      document.head.appendChild(link)
+    }
+    link.href = blobUrl
+
+    // apple-touch-icon for iOS
+    const apple = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null
+    const prevApple = apple?.href ?? ''
+    if (apple && shop.logo) apple.href = shop.logo
+
+    return () => {
+      URL.revokeObjectURL(blobUrl)
+      if (link) link.href = prevHref
+      if (apple) apple.href = prevApple
+    }
+  }, [shop])
 
   if (!shop || shop.status !== 'active') {
     return (

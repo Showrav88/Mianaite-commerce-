@@ -10,7 +10,7 @@ import { Link } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/superadmin/')({
   component: SuperAdminDashboard,
-  head: () => ({ meta: [{ title: 'Super Admin — AITeShops' }] }),
+  head: () => ({ meta: [{ title: '1to99 Market — Platform Admin' }] }),
 })
 
 const weekRevenue = [
@@ -70,10 +70,10 @@ function SuperAdminDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">
-          {t('admin.super.platform')}
+          1to99 Market — Platform Admin
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {lang === 'en' ? `Welcome back, ${user?.name}. Here's what's happening.` : `স্বাগতম, ${user?.name}। এখানে প্ল্যাটফর্মের অবস্থা দেখুন।`}
+          {lang === 'en' ? `Welcome back, ${user?.name}. Manage all vendor shops from here.` : `স্বাগতম, ${user?.name}। এখান থেকে সব ভেন্ডর শপ পরিচালনা করুন।`}
         </p>
       </div>
 

@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ElementType } from 'react'
 import {
   LayoutDashboard, Package, ShoppingCart, BarChart2, Settings,
   LogOut, Menu, Globe, ChevronRight, ExternalLink, Users, ScanLine,
+  RotateCcw, Printer, Layers,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useAdminStore } from '@/lib/admin-store'
@@ -14,15 +15,54 @@ export const Route = createFileRoute('/admin')({
   component: AdminLayout,
 })
 
-const NAV = [
-  { to: '/admin', label: 'admin.dashboard', icon: LayoutDashboard, exact: true },
-  { to: '/admin/products', label: 'admin.products', icon: Package },
-  { to: '/admin/sell', label: 'admin.sell', icon: ScanLine },
-  { to: '/admin/orders', label: 'admin.orders', icon: ShoppingCart },
-  { to: '/admin/inventory', label: 'admin.inventory', icon: BarChart2 },
-  { to: '/admin/customers', label: 'admin.customers', icon: Users },
-  { to: '/admin/settings', label: 'admin.settings', icon: Settings },
+const NAV_TOP = [
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
 ] as const
+
+const NAV_CATALOG = [
+  { to: '/admin/catalog/products', label: 'Products', icon: Package },
+  { to: '/admin/catalog/categories', label: 'Categories', icon: Layers },
+] as const
+
+const NAV_OPS = [
+  { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { to: '/admin/inventory', label: 'Inventory', icon: BarChart2 },
+  { to: '/admin/returns', label: 'Returns', icon: RotateCcw },
+  { to: '/admin/labels', label: 'Labels', icon: Printer },
+  { to: '/admin/sell', label: 'Counter POS', icon: ScanLine },
+] as const
+
+const NAV_BOTTOM = [
+  { to: '/admin/customers', label: 'Customers', icon: Users },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
+] as const
+
+function NavLink({
+  item,
+  active,
+  primaryColor,
+  onClose,
+}: {
+  item: { to: string; label: string; icon: ElementType }
+  active: boolean
+  primaryColor: string
+  onClose: () => void
+}) {
+  return (
+    <Link
+      to={item.to as any}
+      onClick={onClose}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+        active ? 'text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
+      }`}
+      style={active ? { backgroundColor: primaryColor } : {}}
+    >
+      <item.icon className="w-4 h-4 shrink-0" />
+      {item.label}
+      {active && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
+    </Link>
+  )
+}
 
 function AdminLayout() {
   const { user, logout } = useAuth()
@@ -33,7 +73,7 @@ function AdminLayout() {
   const pathname = useRouterState({ select: s => s.location.pathname })
 
   useEffect(() => {
-    if (!user) void navigate({ to: '/login', replace: true })
+    if (!user) void navigate({ to: '/login', search: { redirect: '/admin' }, replace: true })
     else if (user.role === 'super_admin') void navigate({ to: '/superadmin', replace: true })
   }, [user, navigate])
 
@@ -66,24 +106,45 @@ function AdminLayout() {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-          {NAV.map(item => {
-            const active = 'exact' in item && item.exact
-              ? pathname === item.to
-              : pathname === item.to || pathname.startsWith(item.to + '/')
+          {NAV_TOP.map(item => {
+            const active = pathname === item.to
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  active ? 'text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
-                }`}
-                style={active ? { backgroundColor: primaryColor } : {}}
-              >
-                <item.icon className="w-4 h-4 shrink-0" />
-                {t(item.label)}
-                {active && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
-              </Link>
+              <NavLink key={item.to} item={item} active={active} primaryColor={primaryColor} onClose={() => setOpen(false)} />
+            )
+          })}
+
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 pt-4 pb-1">Catalog</p>
+          {NAV_CATALOG.map(item => {
+            const active = pathname === item.to || pathname.startsWith(item.to + '/')
+            return (
+              <NavLink key={item.to} item={item} active={active} primaryColor={primaryColor} onClose={() => setOpen(false)} />
+            )
+          })}
+
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 pt-4 pb-1">Operations</p>
+          {NAV_OPS.map(item => {
+            const active = pathname === item.to || pathname.startsWith(item.to + '/')
+            return (
+              <NavLink key={item.to} item={item} active={active} primaryColor={primaryColor} onClose={() => setOpen(false)} />
+            )
+          })}
+
+          {user!.shopId === 'shop_6' && (
+            <Link
+              to={'/counter' as any}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-600 hover:text-white hover:bg-emerald-600 transition-all mt-1"
+            >
+              <ScanLine className="w-4 h-4 shrink-0" />
+              Market Counter POS
+            </Link>
+          )}
+
+          <Separator className="my-2" />
+          {NAV_BOTTOM.map(item => {
+            const active = pathname === item.to || pathname.startsWith(item.to + '/')
+            return (
+              <NavLink key={item.to} item={item} active={active} primaryColor={primaryColor} onClose={() => setOpen(false)} />
             )
           })}
         </nav>

@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from '@tan
 import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Store, Users, Tag, Palette, LogOut, Menu, X,
-  ShieldCheck, Globe, ChevronRight,
+  ShieldCheck, Globe, ChevronRight, ScanLine,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
@@ -22,6 +22,8 @@ const NAV = [
   { to: '/superadmin/customization', label: 'admin.customization', icon: Palette },
   { to: '/superadmin/customers', label: 'admin.customers', icon: Users },
 ] as const
+
+const NAV_COUNTER = { to: '/counter', label: 'Counter POS', icon: ScanLine }
 
 function SuperAdminLayout() {
   const { user, logout } = useAuth()
@@ -50,9 +52,9 @@ function SuperAdminLayout() {
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-sm">AITeShops</p>
+              <p className="font-bold text-white text-sm">1to99 Market</p>
               <p className="text-[10px] text-violet-300 font-medium uppercase tracking-wider">
-                {t('admin.super.title')}
+                Platform Admin
               </p>
             </div>
           </div>
@@ -84,6 +86,20 @@ function SuperAdminLayout() {
             )
           })}
         </nav>
+
+        <Separator className="bg-slate-700/50" />
+
+        {/* Counter POS shortcut */}
+        <div className="px-3 py-2">
+          <Link
+            to={NAV_COUNTER.to as any}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-400 hover:text-white hover:bg-emerald-700/40 transition-all"
+          >
+            <NAV_COUNTER.icon className="w-4 h-4 shrink-0" />
+            {NAV_COUNTER.label}
+          </Link>
+        </div>
 
         <Separator className="bg-slate-700/50" />
 

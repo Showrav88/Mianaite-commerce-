@@ -253,6 +253,17 @@ const INITIAL_SHOPS: Shop[] = [
     createdAt: '2024-05-01', logo: '',
   },
   {
+    id: 'shop_6', name: '1to99 Market', slug: '1to99-market',
+    description: '1to99 Market — your neighbourhood bazaar. Electronics, clothing, groceries, accessories & more under one roof.',
+    ownerId: 'adm_6', ownerName: '1to99 Admin', status: 'active',
+    allowedCategories: ['cat_electronics', 'cat_fashion', 'cat_beauty', 'cat_jewelry', 'cat_groceries', 'cat_home', 'cat_kids', 'cat_sports', 'cat_books', 'cat_health'],
+    theme: { primaryColor: '#f97316', accentColor: '#10b981', borderRadius: 'medium', fontFamily: 'Inter' },
+    stats: { products: 120, orders: 890, revenue: 9500000, customers: 740 },
+    createdAt: '2020-01-01', logo: '', contactEmail: 'admin.1to99@gmail.com',
+    contactPhone: '01700001999', address: 'Mirpur, Dhaka',
+    motto: 'Everything you need, all in one place.',
+  },
+  {
     id: 'shop_5', name: 'Mood On', slug: 'mood-on',
     description: "Laxmipur's most popular fashion brand since 2013 — Gents Clothing, Beauty & Style",
     ownerId: 'adm_5', ownerName: 'Shoga', status: 'active',
@@ -277,6 +288,12 @@ const INITIAL_SHOPS: Shop[] = [
 ]
 
 const INITIAL_ADMINS: AdminUser[] = [
+  {
+    id: 'adm_6', name: '1to99 Market Admin', email: 'admin.1to99@gmail.com', phone: '01700001999',
+    role: 'shop_admin', shopId: 'shop_6', shopName: '1to99 Market', status: 'active',
+    permissions: ['manage_products', 'manage_orders', 'manage_inventory', 'view_analytics', 'manage_settings'],
+    createdAt: '2020-01-01', lastLogin: '2026-05-24',
+  },
   {
     id: 'adm_1', name: 'Rahim Tech', email: 'rahim@techhub.bd', phone: '01711234567',
     role: 'shop_admin', shopId: 'shop_1', shopName: 'TechHub BD', status: 'active',
@@ -324,6 +341,11 @@ const INITIAL_PRODUCTS: AdminProduct[] = [
   { id: 'p12', name: 'Mood On Gents Shirt (Summer)', sku: 'MON-SHT-002', categoryId: 'cat_fashion', subcategoryId: 'sub_mens_shirt', shopId: 'shop_5', price: 1299, stock: 80, lowStockThreshold: 15, status: 'active', image: 'https://images.unsplash.com/photo-1602810319428-019690571b5b?w=600&q=85', images: ['https://images.unsplash.com/photo-1602810319428-019690571b5b?w=600&q=85', 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&q=85', 'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&q=85'], description: 'Light cotton shirt perfect for Bangladesh summer', sold: 189, tags: ['summer', 'cotton'] },
 
   { id: 'p14', name: 'Mood On Winter Sweater', sku: 'MON-SWT-001', categoryId: 'cat_fashion', subcategoryId: 'sub_mens_shirt', shopId: 'shop_5', price: 3499, costPrice: 1800, stock: 30, lowStockThreshold: 5, status: 'active', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=85', images: ['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=85', 'https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=600&q=85', 'https://images.unsplash.com/photo-1614975059251-992f11792b9f?w=600&q=85'], description: 'Warm & stylish winter sweater for gents', sold: 98, tags: ['winter', 'warm'] },
+  { id: 'p20', name: 'Casio MQ-24 Watch', sku: '1T99-WCH-001', categoryId: 'cat_fashion', shopId: 'shop_6', price: 1250, stock: 60, lowStockThreshold: 10, status: 'active', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=85', description: 'Classic Casio digital watch', sold: 234 },
+  { id: 'p21', name: 'Tupperware Lunch Box Set', sku: '1T99-HOM-001', categoryId: 'cat_home', shopId: 'shop_6', price: 950, stock: 120, lowStockThreshold: 20, status: 'active', image: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600&q=85', description: 'Airtight 3-piece lunch box set', sold: 178 },
+  { id: 'p22', name: 'Pilgrim V5 Pen (6-pack)', sku: '1T99-STN-001', categoryId: 'cat_books', shopId: 'shop_6', price: 180, stock: 500, lowStockThreshold: 50, status: 'active', image: 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600&q=85', description: 'Smooth ink roller pen set', sold: 980 },
+  { id: 'p23', name: 'Sunsilk Shampoo 340ml', sku: '1T99-BTY-001', categoryId: 'cat_beauty', shopId: 'shop_6', price: 290, stock: 200, lowStockThreshold: 30, status: 'active', image: 'https://images.unsplash.com/photo-1526947425960-945c6e72858f?w=600&q=85', description: 'Thick & long hair shampoo', sold: 456 },
+  { id: 'p24', name: 'Cricket Bat (Full Size)', sku: '1T99-SPT-001', categoryId: 'cat_sports', shopId: 'shop_6', price: 2200, stock: 35, lowStockThreshold: 5, status: 'active', image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=85', description: 'Kashmir willow cricket bat', sold: 67 },
 ]
 
 const INITIAL_ORDERS: Order[] = [
