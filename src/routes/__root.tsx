@@ -104,7 +104,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: s => s.location.pathname });
-  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/superadmin') || pathname === '/login' || pathname.startsWith('/shop/') || pathname.startsWith('/counter');
+  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/superadmin') || pathname === '/login' || pathname.startsWith('/shop/') || pathname.startsWith('/counter') || pathname === '/demo';
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

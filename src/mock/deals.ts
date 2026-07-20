@@ -23,7 +23,7 @@ const img = (text: string, bg = 'e8e8e8', fg = '555555') =>
 export const INITIAL_DEALS: MarketDeal[] = [
   {
     id: 'deal_001',
-    shopId: 'shop_mirpur',
+    shopId: 'shop_6',
     shopSlug: '1to99-market-dhaka-mirpur-tw3k9p',
     productId: 'prod_miyako_kettle',
     productName: 'Miyako Electric Kettle 1.8L',
@@ -41,7 +41,7 @@ export const INITIAL_DEALS: MarketDeal[] = [
   },
   {
     id: 'deal_002',
-    shopId: 'shop_mirpur',
+    shopId: 'shop_6',
     shopSlug: '1to99-market-dhaka-mirpur-tw3k9p',
     productId: 'prod_glass_vase',
     productName: 'Crystal Glass Flower Vase — 30cm',
@@ -58,7 +58,7 @@ export const INITIAL_DEALS: MarketDeal[] = [
   },
   {
     id: 'deal_003',
-    shopId: 'shop_mirpur',
+    shopId: 'shop_6',
     shopSlug: '1to99-market-dhaka-mirpur-tw3k9p',
     productId: 'prod_ceramic_plates',
     productName: 'Ceramic Dinner Plate Set — 5pcs',

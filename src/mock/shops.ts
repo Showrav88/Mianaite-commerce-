@@ -60,3 +60,6 @@ export const MARKET_SHOPS: MarketShop[] = [
 ]
 
 export const DEMO_SHOP = MARKET_SHOPS[0]
+
+/** Canonical storefront slug for the primary 1to99 Mirpur demo shop (admin-store shop_6). */
+export const DEFAULT_1TO99_STOREFRONT_SLUG = DEMO_SHOP.slug

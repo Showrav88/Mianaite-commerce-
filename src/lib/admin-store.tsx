@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { DEMO_SHOP } from '@/mock/shops'
 
 export interface ShopTheme {
   primaryColor: string
@@ -253,15 +254,15 @@ const INITIAL_SHOPS: Shop[] = [
     createdAt: '2024-05-01', logo: '',
   },
   {
-    id: 'shop_6', name: '1to99 Market', slug: '1to99-market',
+    id: 'shop_6', name: DEMO_SHOP.name, slug: DEMO_SHOP.slug,
     description: '1to99 Market — your neighbourhood bazaar. Electronics, clothing, groceries, accessories & more under one roof.',
     ownerId: 'adm_6', ownerName: '1to99 Admin', status: 'active',
     allowedCategories: ['cat_electronics', 'cat_fashion', 'cat_beauty', 'cat_jewelry', 'cat_groceries', 'cat_home', 'cat_kids', 'cat_sports', 'cat_books', 'cat_health'],
     theme: { primaryColor: '#f97316', accentColor: '#10b981', borderRadius: 'medium', fontFamily: 'Inter' },
     stats: { products: 120, orders: 890, revenue: 9500000, customers: 740 },
-    createdAt: '2020-01-01', logo: '', contactEmail: 'admin.1to99@gmail.com',
-    contactPhone: '01700001999', address: 'Mirpur, Dhaka',
-    motto: 'Everything you need, all in one place.',
+    createdAt: DEMO_SHOP.established, logo: '', contactEmail: DEMO_SHOP.email,
+    contactPhone: DEMO_SHOP.phone.replace(/\s/g, ''), address: DEMO_SHOP.address,
+    motto: DEMO_SHOP.tagline,
   },
   {
     id: 'shop_5', name: 'Mood On', slug: 'mood-on',
@@ -396,7 +397,11 @@ function mergeProducts(stored: AdminProduct[]): AdminProduct[] {
 
 function mergeShops(stored: Shop[]): Shop[] {
   const storedMap = new Map(stored.map(s => [s.id, s]))
-  const initialMerged = INITIAL_SHOPS.map(s => storedMap.get(s.id) ?? s)
+  const initialMerged = INITIAL_SHOPS.map(s => {
+    const fromStore = storedMap.get(s.id)
+    if (!fromStore) return s
+    return { ...fromStore, slug: s.slug }
+  })
   const initialIds = new Set(INITIAL_SHOPS.map(s => s.id))
   const additions = stored.filter(s => !initialIds.has(s.id))
   return [...initialMerged, ...additions]

@@ -1,13 +1,23 @@
-import { createFileRoute, Outlet, Link, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Outlet, Link, useRouterState, redirect } from '@tanstack/react-router'
 import { ShoppingCart, Search, Store, Globe, User, X, Menu, ChevronRight, ChevronDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAdminStore, SUBCATEGORIES_BY_CATEGORY } from '@/lib/admin-store'
+import { DEFAULT_1TO99_STOREFRONT_SLUG } from '@/mock/shops'
 import { useShopCart } from '@/lib/shop-cart'
 import { useI18n } from '@/lib/i18n'
 import { useCustomerStore } from '@/lib/customer-store'
 import ShopAuthModal from '@/components/shop/ShopAuthModal'
 
 export const Route = createFileRoute('/shop/$slug')({
+  beforeLoad: ({ params }) => {
+    if (params.slug === '1to99-market') {
+      throw redirect({
+        to: '/shop/$slug',
+        params: { slug: DEFAULT_1TO99_STOREFRONT_SLUG },
+        replace: true,
+      })
+    }
+  },
   component: ShopLayout,
 })
 
@@ -146,6 +156,14 @@ function ShopLayout() {
                 style={{ borderRadius: radius }}
               >
                 {lang === 'en' ? 'About' : 'আমাদের'}
+              </Link>
+              <Link
+                to="/shop/$slug/deals"
+                params={{ slug }}
+                className="text-white/80 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                style={{ borderRadius: radius }}
+              >
+                {lang === 'en' ? 'Deals' : 'ডিল'}
               </Link>
             </nav>
 
@@ -290,6 +308,15 @@ function ShopLayout() {
               >
                 <ChevronRight className="w-4 h-4 text-gray-400" />
                 {lang === 'en' ? 'About' : 'আমাদের'}
+              </Link>
+              <Link
+                to="/shop/$slug/deals"
+                params={{ slug }}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+                {lang === 'en' ? "Today's Deals" : 'আজকের ডিল'}
               </Link>
             </nav>
             <div className="px-4 py-4 border-t text-xs text-gray-400 text-center">
