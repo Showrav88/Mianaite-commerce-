@@ -4,7 +4,7 @@ import { z } from 'zod'
 import {
   Plus, Pencil, Trash2, Search, Package, QrCode,
   Video, X, Upload, ScanLine, ExternalLink, ImagePlus, Tag,
-  TrendingUp, Percent, DollarSign, Cloud, Printer,
+  TrendingUp, Percent, DollarSign, Cloud, Printer, Lock,
 } from 'lucide-react'
 import { uploadToCloudinary, cloudinaryConfigured } from '@/lib/cloudinary'
 import { openProductForSale, resolveProductFromScan, shopProductPageUrl } from '@/lib/shop-url'
@@ -786,7 +786,15 @@ function ProductsPage() {
           <Tabs defaultValue="basic" className="mt-1">
             <TabsList className="grid grid-cols-3 w-full">
               <TabsTrigger value="basic">{tx('Basic Info', 'মূল তথ্য')}</TabsTrigger>
-              <TabsTrigger value="media">{tx('Media', 'মিডিয়া')}</TabsTrigger>
+              <TabsTrigger
+                value="media"
+                disabled
+                className="opacity-50 pointer-events-none gap-1"
+                title={tx('Media uploads are temporarily locked', 'মিডিয়া আপলোড সাময়িক বন্ধ')}
+              >
+                <Lock className="w-3 h-3" />
+                {tx('Media', 'মিডিয়া')}
+              </TabsTrigger>
               <TabsTrigger value="pricing">{tx('Pricing & Stock', 'মূল্য ও স্টক')}</TabsTrigger>
             </TabsList>
 
