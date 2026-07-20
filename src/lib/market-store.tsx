@@ -65,6 +65,7 @@ const SHIFT_HISTORY_KEY = '1to99_pos_shift_history_v1'
 
 function load<T>(key: string, fallback: T): T {
   try {
+    if (typeof window === 'undefined') return fallback
     const raw = localStorage.getItem(key)
     return raw ? (JSON.parse(raw) as T) : fallback
   } catch {
@@ -73,7 +74,10 @@ function load<T>(key: string, fallback: T): T {
 }
 
 function save(key: string, value: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* ignore */ }
+  try {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch { /* ignore */ }
 }
 
 function migrateLegacyShift(raw: unknown): PosShift | null {
@@ -111,8 +115,11 @@ export function MarketStoreProvider({ children }: { children: ReactNode }) {
   const [currentShift, setCurrentShift] = useState<PosShift | null>(() => {
     const loaded = load(ACTIVE_SHIFT_KEY, null as PosShift | null)
     if (loaded) return loaded
-    const legacy = localStorage.getItem('market_counter_v1')
-    if (legacy) return migrateLegacyShift(JSON.parse(legacy))
+    if (typeof window === 'undefined') return null
+    try {
+      const legacy = localStorage.getItem('market_counter_v1')
+      if (legacy) return migrateLegacyShift(JSON.parse(legacy))
+    } catch { /* ignore */ }
     return null
   })
   const [shiftHistory, setShiftHistory] = useState<PosShift[]>(() =>

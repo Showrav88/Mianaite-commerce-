@@ -108,6 +108,7 @@ const INITIAL_DEALS: SupplierDeal[] = []
 
 function load<T>(key: string, fallback: T): T {
   try {
+    if (typeof window === 'undefined') return fallback
     const raw = localStorage.getItem(key)
     return raw ? (JSON.parse(raw) as T) : fallback
   } catch {

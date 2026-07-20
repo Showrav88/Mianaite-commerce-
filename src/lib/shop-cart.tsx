@@ -31,6 +31,7 @@ const CART_KEY = 'shop_cart_v1'
 
 function loadCart(): { items: ShopCartItem[]; currentShopId: string | null } {
   try {
+    if (typeof window === 'undefined') return { items: [], currentShopId: null }
     const raw = localStorage.getItem(CART_KEY)
     if (!raw) return { items: [], currentShopId: null }
     return JSON.parse(raw)
@@ -45,7 +46,7 @@ export function ShopCartProvider({ children }: { children: ReactNode }) {
   const [currentShopId, setCurrentShopId] = useState<string | null>(initial.currentShopId)
 
   useEffect(() => {
-    try { localStorage.setItem(CART_KEY, JSON.stringify({ items, currentShopId })) } catch {}
+    try { if (typeof window !== 'undefined') localStorage.setItem(CART_KEY, JSON.stringify({ items, currentShopId })) } catch {}
   }, [items, currentShopId])
 
   function addItem(item: Omit<ShopCartItem, 'qty'>): 'added' | 'shop_conflict' {
