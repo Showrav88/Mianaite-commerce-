@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Plus, Minus, Search, Package, AlertTriangle } from 'lucide-react'
-import { useAdminStore, ALL_CATEGORIES, fmt, type AdminProduct } from '@/lib/admin-store'
+import { useAdminStore, fmt, type AdminProduct } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
 import { canEditInventory } from '@/lib/permissions'
 import { useI18n } from '@/lib/i18n'
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/admin/inventory')({
 
 function InventoryPage() {
   const { user } = useAuth()
-  const { products, setProducts, shops } = useAdminStore()
+  const { products, setProducts, shops, allCategories } = useAdminStore()
   const { t, lang, tx } = useI18n()
   const [search, setSearch] = useState('')
   const [restockProduct, setRestockProduct] = useState<AdminProduct | null>(null)
@@ -141,7 +141,7 @@ function InventoryPage() {
             </thead>
             <tbody className="divide-y">
               {myProducts.map(p => {
-                const cat = ALL_CATEGORIES.find(c => c.id === p.categoryId)
+                const cat = allCategories.find(c => c.id === p.categoryId)
                 const status = stockStatus(p)
                 return (
                   <tr key={p.id} className={`hover:bg-slate-50/50 ${p.stock === 0 ? 'bg-red-50/30' : p.stock <= p.lowStockThreshold ? 'bg-amber-50/30' : ''}`}>

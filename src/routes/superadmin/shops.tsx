@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Plus, Pencil, Search, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { useAdminStore, ALL_CATEGORIES, fmt, type Shop } from '@/lib/admin-store'
+import { useAdminStore, fmt, type Shop } from '@/lib/admin-store'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,7 +25,8 @@ type FormState = {
 const defaultForm: FormState = { name: '', description: '', ownerName: '', status: 'active', allowedCategories: [] }
 
 function ShopsPage() {
-  const { shops, setShops } = useAdminStore()
+  const { shops, setShops, globalCategories, allCategories } = useAdminStore()
+  const assignableCats = globalCategories()
   const { t, lang } = useI18n()
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -166,7 +167,7 @@ function ShopsPage() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
                       {shop.allowedCategories.slice(0, 2).map(cid => {
-                        const cat = ALL_CATEGORIES.find(c => c.id === cid)
+                        const cat = allCategories.find(c => c.id === cid)
                         return cat ? <span key={cid} className="text-xs bg-violet-50 text-violet-700 px-1.5 py-0.5 rounded">{cat.icon} {lang === 'en' ? cat.name : cat.nameBn}</span> : null
                       })}
                       {shop.allowedCategories.length > 2 && <span className="text-xs text-muted-foreground">+{shop.allowedCategories.length - 2}</span>}
@@ -238,7 +239,7 @@ function ShopsPage() {
             <div className="space-y-2">
               <Label>{lang === 'en' ? 'Allowed Categories' : 'অনুমোদিত ক্যাটাগরি'}</Label>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-                {ALL_CATEGORIES.map(cat => (
+                {assignableCats.map(cat => (
                   <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded p-1.5">
                     <Checkbox
                       checked={form.allowedCategories.includes(cat.id)}

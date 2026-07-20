@@ -1,23 +1,27 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState, useRef } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState, useRef, useEffect } from 'react'
+import { z } from 'zod'
 import {
   Plus, Pencil, Trash2, Search, Package, QrCode,
   Video, X, Upload, ScanLine, ExternalLink, ImagePlus, Tag,
-  TrendingUp, Percent, DollarSign, Cloud,
+  TrendingUp, Percent, DollarSign, Cloud, Printer,
 } from 'lucide-react'
 import { uploadToCloudinary, cloudinaryConfigured } from '@/lib/cloudinary'
 import { openProductForSale, resolveProductFromScan, shopProductPageUrl } from '@/lib/shop-url'
 import {
-  useAdminStore, ALL_CATEGORIES, SUBCATEGORIES_BY_CATEGORY,
+  useAdminStore, SUBCATEGORIES_BY_CATEGORY,
   fmt, effectivePrice, profitAmount, discountBadgeText,
   type AdminProduct,
 } from '@/lib/admin-store'
+import { subcategoriesForShopCategory } from '@/lib/category-config'
 import {
   extractYouTubeId,
   isFacebookVideoUrl,
   facebookVideoEmbedSrc,
 } from '@/lib/social-embed'
 import { useAuth } from '@/lib/auth'
+import { useOfficeStore } from '@/lib/office-store'
+import { productFormFromDealLine, dealSupportsProductPrefill } from '@/lib/supplier-product-flow'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +31,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+const productsSearchSchema = z.object({
+  dealId: z.string().optional(),
+  line: z.coerce.number().optional(),
+})
+
 export const Route = createFileRoute('/admin/products')({
+  validateSearch: productsSearchSchema,
   component: ProductsPage,
   head: () => ({ meta: [{ title: 'Products — Admin' }] }),
 })
@@ -325,7 +335,11 @@ function QRModal({
 
 function ProductsPage() {
   const { user } = useAuth()
-  const { products, setProducts, shops } = useAdminStore()
+  const navigate = useNavigate()
+  const { dealId, line: lineSearch } = Route.useSearch()
+  const lineIndex = lineSearch ?? 0
+  const { supplierDeals, suppliers, registerDealLineProduct } = useOfficeStore()
+  const { products, setProducts, shops, allCategories, shopCategories, getShopCategoryConfig } = useAdminStore()
   const { t, lang, tx } = useI18n()
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('all')
@@ -337,11 +351,28 @@ function ProductsPage() {
   const [scanMode, setScanMode] = useState(false)
   const [scanBuffer, setScanBuffer] = useState('')
   const scanRef = useRef<HTMLInputElement>(null)
+  const [supplierDealCtx, setSupplierDealCtx] = useState<{ dealId: string; lineIndex: number } | null>(null)
+  const [afterSupplierSave, setAfterSupplierSave] = useState<{
+    productId: string
+    dealId: string
+    lineIndex: number
+    total: number
+  } | null>(null)
+  const [dealPrefillError, setDealPrefillError] = useState<string | null>(null)
+  const openedDealKey = useRef<string | null>(null)
+
+  useEffect(() => {
+    openedDealKey.current = null
+  }, [dealId, lineIndex])
 
   const shop = shops.find(s => s.id === user?.shopId)
   const primaryColor = shop?.theme.primaryColor ?? '#f97316'
-  const allowedCats = ALL_CATEGORIES.filter(c => shop?.allowedCategories.includes(c.id))
-  const subcats = form.categoryId ? (SUBCATEGORIES_BY_CATEGORY[form.categoryId] ?? []) : []
+  const allowedCats = shopCategories(user?.shopId ?? 'shop_6', shop?.allowedCategories ?? [])
+  const shopId = user?.shopId ?? 'shop_6'
+  const catConfig = form.categoryId ? getShopCategoryConfig(shopId, form.categoryId) : null
+  const subcats = catConfig
+    ? subcategoriesForShopCategory(catConfig)
+    : (form.categoryId ? (SUBCATEGORIES_BY_CATEGORY[form.categoryId] ?? []) : [])
 
   // Live pricing calc in form
   const sellPrice = Number(form.price) || 0
@@ -359,8 +390,14 @@ function ProductsPage() {
       (p.tags ?? []).some(tag => tag.toLowerCase().includes(search.toLowerCase()))
     )
 
-  function openAdd() { setEditId(null); setForm(defaultForm); setDialogOpen(true) }
-  function openEdit(p: AdminProduct) {
+  function openAdd() {
+    setSupplierDealCtx(null)
+    setEditId(null)
+    setForm(defaultForm)
+    setDialogOpen(true)
+  }
+  function openEdit(p: AdminProduct, opts?: { keepSupplierDeal?: boolean }) {
+    if (!opts?.keepSupplierDeal) setSupplierDealCtx(null)
     setEditId(p.id)
     setForm({
       name: p.name, sku: p.sku, description: p.description,
@@ -381,10 +418,63 @@ function ProductsPage() {
     setDialogOpen(true)
   }
 
+  useEffect(() => {
+    if (!dealId || !user?.shopId) {
+      setDealPrefillError(null)
+      return
+    }
+    const key = `${dealId}:${lineIndex}`
+    if (openedDealKey.current === key) return
+    const deal = supplierDeals.find(d => d.id === dealId)
+    if (!deal) {
+      setDealPrefillError(tx('Deal not found. It may have been removed.', 'ডিল পাওয়া যায়নি।'))
+      return
+    }
+    if (!dealSupportsProductPrefill(deal)) {
+      setDealPrefillError(tx('This deal has no lines to import.', 'এই ডিলে ইমপোর্ট করার লাইন নেই।'))
+      return
+    }
+    setDealPrefillError(null)
+    const idx = Math.min(Math.max(0, lineIndex), Math.max(0, deal.items.length - 1))
+    const existingId = deal.productIdsByLine?.[idx]
+    setSupplierDealCtx({ dealId, lineIndex: idx })
+    if (existingId) {
+      const existing = products.find(p => p.id === existingId && p.shopId === user.shopId)
+      if (existing) {
+        openedDealKey.current = key
+        openEdit(existing, { keepSupplierDeal: true })
+        return
+      }
+    }
+    const line = deal.items[idx]
+    if (!line?.name.trim() || !line.sku.trim()) {
+      setDealPrefillError(tx('Deal line is missing name or SKU.', 'ডিল লাইনে নাম বা SKU নেই।'))
+      return
+    }
+    const sup = suppliers.find(s => s.id === deal.supplierId)
+    const pre = productFormFromDealLine(line, deal.reference, sup?.name ?? '')
+    setEditId(null)
+    setForm({
+      ...defaultForm,
+      ...pre,
+      subcategoryId: '',
+      discountType: 'none',
+      discountValue: '',
+      images: [],
+      youtubeUrl: '',
+      facebookVideoUrl: '',
+      tags: '',
+      status: 'active',
+    })
+    openedDealKey.current = key
+    setDialogOpen(true)
+  }, [dealId, lineIndex, supplierDeals, user?.shopId, products, suppliers])
+
   function saveProduct() {
     if (!form.name.trim() || !form.categoryId) return
     const firstImage = form.images[0] ?? ''
     const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
+    const newId = editId ?? ('p_' + Date.now())
     const data: Omit<AdminProduct, 'id' | 'sold' | 'videoUrl'> = {
       name: form.name, sku: form.sku, description: form.description,
       categoryId: form.categoryId, subcategoryId: form.subcategoryId || undefined,
@@ -405,10 +495,34 @@ function ProductsPage() {
         const { videoUrl: _legacy, ...rest } = p
         return { ...rest, ...data }
       }))
+      if (supplierDealCtx) {
+        const deal = supplierDeals.find(d => d.id === supplierDealCtx.dealId)
+        setAfterSupplierSave({
+          productId: editId,
+          dealId: supplierDealCtx.dealId,
+          lineIndex: supplierDealCtx.lineIndex,
+          total: deal?.items.length ?? 1,
+        })
+      }
     } else {
-      setProducts([...products, { ...data, id: 'p_' + Date.now(), sold: 0 }])
+      setProducts([...products, { ...data, id: newId, sold: 0 }])
+      if (supplierDealCtx) {
+        registerDealLineProduct(supplierDealCtx.dealId, supplierDealCtx.lineIndex, newId)
+        const deal = supplierDeals.find(d => d.id === supplierDealCtx.dealId)
+        setAfterSupplierSave({
+          productId: newId,
+          dealId: supplierDealCtx.dealId,
+          lineIndex: supplierDealCtx.lineIndex,
+          total: deal?.items.length ?? 1,
+        })
+      }
     }
+    setSupplierDealCtx(null)
     setDialogOpen(false)
+    if (dealId) {
+      void navigate({ to: '/admin/products', search: {}, replace: true })
+      openedDealKey.current = null
+    }
   }
 
   function deleteProduct(id: string) { setProducts(products.filter(p => p.id !== id)); setDeleteId(null) }
@@ -467,6 +581,21 @@ function ProductsPage() {
           <Plus className="w-4 h-4" /> {t('admin.addProduct')}
         </Button>
       </div>
+
+      {dealPrefillError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {dealPrefillError}
+        </div>
+      )}
+
+      {dealId && supplierDealCtx && !dealPrefillError && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          {tx(
+            'Supplier deal line loaded — review prefilled fields, add photos if needed, then save.',
+            'সাপ্লায়ার ডিলের লাইন লোড হয়েছে — আগে থেকে পূরণ করা তথ্য দেখুন, প্রয়োজনে ছবি যোগ করে সংরক্ষণ করুন।',
+          )}
+        </div>
+      )}
 
       {/* Search + Scanner */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -542,7 +671,7 @@ function ProductsPage() {
             </thead>
             <tbody className="divide-y">
               {myProducts.map(p => {
-                const cat = ALL_CATEGORIES.find(c => c.id === p.categoryId)
+                const cat = allCategories.find(c => c.id === p.categoryId)
                 const subcat = p.subcategoryId
                   ? (SUBCATEGORIES_BY_CATEGORY[p.categoryId] ?? []).find(s => s.id === p.subcategoryId)
                   : null
@@ -642,10 +771,17 @@ function ProductsPage() {
       </Card>
 
       {/* Add / Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={open => {
+        setDialogOpen(open)
+        if (!open && dealId) openedDealKey.current = null
+      }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editId ? t('admin.editProduct') : t('admin.addProduct')}</DialogTitle>
+            <DialogTitle>
+              {supplierDealCtx
+                ? tx(`From supplier deal — item ${supplierDealCtx.lineIndex + 1}`, `সাপ্লায়ার ডিল — আইটেম ${supplierDealCtx.lineIndex + 1}`)
+                : editId ? t('admin.editProduct') : t('admin.addProduct')}
+            </DialogTitle>
           </DialogHeader>
           <Tabs defaultValue="basic" className="mt-1">
             <TabsList className="grid grid-cols-3 w-full">
@@ -898,6 +1034,54 @@ function ProductsPage() {
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('admin.cancel')}</Button>
             <Button onClick={saveProduct} className="text-white" style={{ backgroundColor: primaryColor }}>{t('admin.save')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* After supplier deal line saved */}
+      <Dialog open={!!afterSupplierSave} onOpenChange={open => { if (!open) setAfterSupplierSave(null) }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{tx('Product saved', 'পণ্য সংরক্ষিত')}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {afterSupplierSave && tx(
+              `Line ${afterSupplierSave.lineIndex + 1} of ${afterSupplierSave.total} from this deal is in your catalog.`,
+              `এই ডিলের ${afterSupplierSave.total}-এর মধ্যে ${afterSupplierSave.lineIndex + 1} নম্বর লাইন ক্যাটালগে যোগ হয়েছে।`,
+            )}
+          </p>
+          <DialogFooter className="flex-col sm:flex-col gap-2">
+            <Button
+              className="w-full gap-2 text-white"
+              style={{ backgroundColor: primaryColor }}
+              onClick={() => {
+                const id = afterSupplierSave!.productId
+                setAfterSupplierSave(null)
+                void navigate({ to: '/admin/labels', search: { pick: id } })
+              }}
+            >
+              <Printer className="w-4 h-4" />
+              {tx('Print price tags / labels', 'ট্যাগ / লেবেল প্রিন্ট')}
+            </Button>
+            {afterSupplierSave && afterSupplierSave.lineIndex + 1 < afterSupplierSave.total && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const next = afterSupplierSave!
+                  setAfterSupplierSave(null)
+                  void navigate({
+                    to: '/admin/products',
+                    search: { dealId: next.dealId, line: next.lineIndex + 1 },
+                  })
+                }}
+              >
+                {tx('Next deal line', 'পরের লাইন')}
+              </Button>
+            )}
+            <Button variant="ghost" className="w-full" onClick={() => setAfterSupplierSave(null)}>
+              {tx('Stay on products', 'পণ্য তালিকায় থাকুন')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

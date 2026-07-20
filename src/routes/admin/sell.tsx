@@ -92,15 +92,15 @@ function SellPage() {
   }
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0)
-  const canComplete = cart.length > 0 && customerName.trim() && customerPhone.trim()
+  const canComplete = cart.length > 0
 
   function executeSale() {
     if (!canComplete || !shop || !user?.shopId) return
     setCompleting(true)
 
     const customer = registerCustomer({
-      name: customerName.trim(),
-      phone: customerPhone.trim(),
+      name: customerName.trim() || tx('Walk-in', 'ওয়াক-ইন'),
+      phone: customerPhone.trim() || '—',
       shopId: shop.id,
       source: 'direct',
     })
@@ -255,7 +255,7 @@ function SellPage() {
           </p>
           <div className="space-y-2">
             <div>
-              <Label className="text-xs">{tx('Name *', 'নাম *')}</Label>
+              <Label className="text-xs">{tx('Name (optional)', 'নাম (ঐচ্ছিক)')}</Label>
               <Input
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
@@ -264,7 +264,7 @@ function SellPage() {
               />
             </div>
             <div>
-              <Label className="text-xs">{tx('Phone *', 'ফোন *')}</Label>
+              <Label className="text-xs">{tx('Phone (optional)', 'ফোন (ঐচ্ছিক)')}</Label>
               <Input
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
@@ -326,7 +326,7 @@ function SellPage() {
           </Button>
           {!canComplete && cart.length > 0 && (
             <p className="text-xs text-amber-600 text-center">
-              {tx('Enter customer name and phone to continue.', 'চালিয়ে যেতে গ্রাহকের নাম ও ফোন দিন।')}
+              {tx('Add products to cart to continue.', 'কার্টে পণ্য যোগ করুন।')}
             </p>
           )}
         </div>

@@ -1,14 +1,14 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 
-export type UserRole = 'owner' | 'manager' | 'staff'
+export type UserRole = 'owner' | 'manager' | 'staff' | 'super_admin'
 
 export interface AuthUser {
   id: string
   name: string
   email: string
   role: UserRole
-  shopId: 'shop_6'
-  shopName: '1to99'
+  shopId?: 'shop_6'
+  shopName?: string
 }
 
 interface AuthCtx {
@@ -27,6 +27,7 @@ function readStorage(): AuthUser | null {
     const s = localStorage.getItem(STORAGE_KEY)
     if (!s) return null
     const parsed = JSON.parse(s) as AuthUser
+    if (parsed.role === 'super_admin') return parsed
     if (parsed.shopId !== 'shop_6') return null
     return parsed
   } catch {
@@ -60,6 +61,12 @@ export const DEMO_ACCOUNTS: AuthUser[] = [
     role: 'staff',
     shopId: 'shop_6',
     shopName: '1to99',
+  },
+  {
+    id: 'sa_1',
+    name: 'Platform Super Admin',
+    email: 'super@1to99.com',
+    role: 'super_admin',
   },
 ]
 

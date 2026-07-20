@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { stripProductImages } from '@/lib/media-lock'
+import {
+  buildDefaultShopCategoryConfig,
+  type ShopCategoryConfig,
+} from '@/lib/category-config'
 
 export interface ShopTheme {
   primaryColor: string
@@ -54,12 +58,17 @@ export interface AdminUser {
   lastLogin?: string
 }
 
+export type CategoryKind = 'system' | 'platform' | 'shop'
+
 export interface Category {
   id: string
   name: string
   nameBn: string
   icon: string
   slug: string
+  kind: CategoryKind
+  /** Set when kind === 'shop' — only that shop sees and manages it. */
+  shopId?: string
 }
 
 export interface Subcategory {
@@ -191,18 +200,50 @@ export interface Order {
   createdAt: string
 }
 
-export const ALL_CATEGORIES: Category[] = [
-  { id: 'cat_electronics', name: 'Electronics', nameBn: 'ইলেকট্রনিক্স', icon: '💻', slug: 'electronics' },
-  { id: 'cat_fashion', name: 'Fashion', nameBn: 'ফ্যাশন', icon: '👗', slug: 'fashion' },
-  { id: 'cat_groceries', name: 'Groceries', nameBn: 'গ্রোসারি', icon: '🛒', slug: 'groceries' },
-  { id: 'cat_home', name: 'Home & Living', nameBn: 'হোম ও লিভিং', icon: '🏠', slug: 'home' },
-  { id: 'cat_beauty', name: 'Beauty', nameBn: 'বিউটি', icon: '💄', slug: 'beauty' },
-  { id: 'cat_kids', name: 'Kids', nameBn: 'শিশু', icon: '🧸', slug: 'kids' },
-  { id: 'cat_sports', name: 'Sports', nameBn: 'স্পোর্টস', icon: '⚽', slug: 'sports' },
-  { id: 'cat_books', name: 'Books', nameBn: 'বই', icon: '📚', slug: 'books' },
-  { id: 'cat_jewelry', name: 'Jewelry', nameBn: 'জুয়েলারি', icon: '💎', slug: 'jewelry' },
-  { id: 'cat_furniture', name: 'Furniture', nameBn: 'আসবাবপত্র', icon: '🛋️', slug: 'furniture' },
+/** Built-in platform categories (super admin assigns per shop). */
+export const SYSTEM_CATEGORIES: Category[] = [
+  { id: 'cat_electronics', name: 'Electronics', nameBn: 'ইলেকট্রনিক্স', icon: '💻', slug: 'electronics', kind: 'system' },
+  { id: 'cat_fashion', name: 'Fashion', nameBn: 'ফ্যাশন', icon: '👗', slug: 'fashion', kind: 'system' },
+  { id: 'cat_groceries', name: 'Groceries', nameBn: 'গ্রোসারি', icon: '🛒', slug: 'groceries', kind: 'system' },
+  { id: 'cat_home', name: 'Home & Living', nameBn: 'হোম ও লিভিং', icon: '🏠', slug: 'home', kind: 'system' },
+  { id: 'cat_beauty', name: 'Beauty', nameBn: 'বিউটি', icon: '💄', slug: 'beauty', kind: 'system' },
+  { id: 'cat_kids', name: 'Kids', nameBn: 'শিশু', icon: '🧸', slug: 'kids', kind: 'system' },
+  { id: 'cat_sports', name: 'Sports', nameBn: 'স্পোর্টস', icon: '⚽', slug: 'sports', kind: 'system' },
+  { id: 'cat_books', name: 'Books', nameBn: 'বই', icon: '📚', slug: 'books', kind: 'system' },
+  { id: 'cat_jewelry', name: 'Jewelry', nameBn: 'জুয়েলারি', icon: '💎', slug: 'jewelry', kind: 'system' },
+  { id: 'cat_furniture', name: 'Furniture', nameBn: 'আসবাবপত্র', icon: '🛋️', slug: 'furniture', kind: 'system' },
 ]
+
+/** @deprecated Prefer `useAdminStore().allCategories` — static system list only. */
+export const ALL_CATEGORIES: Category[] = SYSTEM_CATEGORIES
+
+export function mergeCategoryLists(custom: Category[]): Category[] {
+  const map = new Map<string, Category>()
+  for (const c of SYSTEM_CATEGORIES) map.set(c.id, c)
+  for (const c of custom) map.set(c.id, c)
+  return [...map.values()]
+}
+
+/** Global categories super admin can toggle per shop (system + super-admin-created). */
+export function globalAssignableCategories(all: Category[]): Category[] {
+  return all.filter(c => c.kind === 'system' || c.kind === 'platform')
+}
+
+/** Categories this shop may use in POS/catalog (allowed globals + own shop categories). */
+export function categoriesForShop(all: Category[], shopId: string, allowedIds: string[]): Category[] {
+  return all.filter(c => {
+    if (c.kind === 'shop') return c.shopId === shopId
+    return allowedIds.includes(c.id)
+  })
+}
+
+function slugifyCategoryName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\u0980-\u09FF]+/gi, '-')
+    .replace(/^-+|-+$/g, '') || 'category'
+}
 
 export const ALL_PERMISSIONS = [
   { key: 'manage_products', label: 'Manage Products', labelBn: 'পণ্য পরিচালনা' },
@@ -257,7 +298,7 @@ const INITIAL_SHOPS: Shop[] = [
     id: 'shop_6', name: '1to99', slug: '1to99',
     description: '1to99 — neighbourhood retail & counter POS. Inventory, billing, and daily accounts.',
     ownerId: 'adm_6', ownerName: '1to99 Owner', status: 'active',
-    allowedCategories: ['cat_electronics', 'cat_fashion', 'cat_beauty', 'cat_jewelry', 'cat_groceries', 'cat_home', 'cat_kids', 'cat_sports', 'cat_books', 'cat_health'],
+    allowedCategories: ['cat_electronics', 'cat_fashion', 'cat_beauty', 'cat_jewelry', 'cat_groceries', 'cat_home', 'cat_kids', 'cat_sports', 'cat_books', 'cat_furniture'],
     theme: { primaryColor: '#f97316', accentColor: '#10b981', borderRadius: 'medium', fontFamily: 'Inter' },
     stats: { products: 120, orders: 890, revenue: 9500000, customers: 740 },
     createdAt: '2020-01-01', logo: '', contactEmail: 'owner@1to99.com',
@@ -364,20 +405,35 @@ const INITIAL_ORDERS: Order[] = [
 
 type ShopUpdater = Shop[] | ((prev: Shop[]) => Shop[])
 
+export type NewCategoryInput = { name: string; nameBn?: string; icon?: string }
+
 interface AdminStore {
   shops: Shop[]
   adminUsers: AdminUser[]
   products: AdminProduct[]
   orders: Order[]
+  allCategories: Category[]
   setShops: (shops: ShopUpdater) => void
   setAdminUsers: (users: AdminUser[]) => void
   setProducts: (products: AdminProduct[]) => void
   setOrders: (orders: Order[]) => void
+  addShopCategory: (shopId: string, input: NewCategoryInput) => Category | null
+  addPlatformCategory: (input: NewCategoryInput) => Category | null
+  updateShopCategory: (shopId: string, categoryId: string, input: NewCategoryInput) => boolean
+  shopCategories: (shopId: string, allowedIds: string[]) => Category[]
+  globalCategories: () => Category[]
+  getShopCategoryConfig: (shopId: string, categoryId: string) => ShopCategoryConfig
+  saveShopCategoryConfig: (config: ShopCategoryConfig) => void
 }
 
 const StoreCtx = createContext<AdminStore>({
-  shops: [], adminUsers: [], products: [], orders: [],
+  shops: [], adminUsers: [], products: [], orders: [], allCategories: SYSTEM_CATEGORIES,
   setShops: () => {}, setAdminUsers: () => {}, setProducts: () => {}, setOrders: () => {},
+  addShopCategory: () => null, addPlatformCategory: () => null,
+  updateShopCategory: () => false,
+  shopCategories: () => [], globalCategories: () => SYSTEM_CATEGORIES,
+  getShopCategoryConfig: (shopId, categoryId) => buildDefaultShopCategoryConfig(shopId, categoryId),
+  saveShopCategoryConfig: () => {},
 })
 
 /** Office POS shop — no seeded demo products; start empty until stock-in. */
@@ -386,6 +442,8 @@ export const OFFICE_SHOP_ID = 'shop_6'
 /** Demo persistence until a real API exists (same browser only). */
 const PRODUCTS_LOCAL_KEY = 'banglaflow_admin_products_v3'
 const SHOPS_LOCAL_KEY = 'banglaflow_admin_shops_v2'
+const CUSTOM_CATEGORIES_KEY = 'banglaflow_custom_categories_v1'
+const SHOP_CATEGORY_CONFIG_KEY = 'banglaflow_shop_category_config_v1'
 
 const REMOVED_PRODUCT_IDS = new Set(['p13', 'p15'])
 
@@ -439,11 +497,53 @@ function parseStoredProducts(raw: string): AdminProduct[] | null {
   }
 }
 
+function parseStoredShopCategoryConfigs(raw: string): ShopCategoryConfig[] | null {
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return null
+    return parsed as ShopCategoryConfig[]
+  } catch {
+    return null
+  }
+}
+
+function parseStoredCustomCategories(raw: string): Category[] | null {
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return null
+    if (parsed.length === 0) return []
+    const out: Category[] = []
+    for (const row of parsed) {
+      const c = row as Record<string, unknown>
+      if (typeof c.id !== 'string' || typeof c.name !== 'string') continue
+      const kind = c.kind as CategoryKind
+      if (kind !== 'platform' && kind !== 'shop') continue
+      if (kind === 'shop' && typeof c.shopId !== 'string') continue
+      out.push({
+        id: c.id,
+        name: c.name,
+        nameBn: typeof c.nameBn === 'string' ? c.nameBn : c.name,
+        icon: typeof c.icon === 'string' ? c.icon : '🏷️',
+        slug: typeof c.slug === 'string' ? c.slug : slugifyCategoryName(c.name),
+        kind,
+        shopId: kind === 'shop' ? (c.shopId as string) : undefined,
+      })
+    }
+    return out
+  } catch {
+    return null
+  }
+}
+
 export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [shops, setShopsState] = useState<Shop[]>(INITIAL_SHOPS)
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>(INITIAL_ADMINS)
   const [products, setProductsState] = useState<AdminProduct[]>(() => mergeProducts(null))
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS)
+  const [customCategories, setCustomCategories] = useState<Category[]>([])
+  const [shopCategoryConfigs, setShopCategoryConfigs] = useState<ShopCategoryConfig[]>([])
+
+  const allCategories = useMemo(() => mergeCategoryLists(customCategories), [customCategories])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -457,6 +557,16 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       if (rawProducts) {
         const loadedProducts = parseStoredProducts(rawProducts)
         if (loadedProducts !== null) setProductsState(mergeProducts(loadedProducts))
+      }
+      const rawCats = localStorage.getItem(CUSTOM_CATEGORIES_KEY)
+      if (rawCats) {
+        const loaded = parseStoredCustomCategories(rawCats)
+        if (loaded) setCustomCategories(loaded)
+      }
+      const rawCfg = localStorage.getItem(SHOP_CATEGORY_CONFIG_KEY)
+      if (rawCfg) {
+        const loadedCfg = parseStoredShopCategoryConfigs(rawCfg)
+        if (loadedCfg) setShopCategoryConfigs(loadedCfg)
       }
     } catch {
       /* ignore corrupt storage */
@@ -473,6 +583,12 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       } else if (e.key === PRODUCTS_LOCAL_KEY) {
         const loaded = parseStoredProducts(e.newValue)
         if (loaded !== null) setProductsState(mergeProducts(loaded))
+      } else if (e.key === CUSTOM_CATEGORIES_KEY) {
+        const loaded = parseStoredCustomCategories(e.newValue)
+        if (loaded) setCustomCategories(loaded)
+      } else if (e.key === SHOP_CATEGORY_CONFIG_KEY) {
+        const loaded = parseStoredShopCategoryConfigs(e.newValue)
+        if (loaded) setShopCategoryConfigs(loaded)
       }
     }
     window.addEventListener('storage', onStorage)
@@ -503,8 +619,107 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const addShopCategory = useCallback((shopId: string, input: NewCategoryInput): Category | null => {
+    const name = input.name.trim()
+    if (!name) return null
+    const nameBn = (input.nameBn?.trim() || name)
+    const suffix = Date.now().toString(36)
+    const cat: Category = {
+      id: `cat_shop_${shopId}_${suffix}`,
+      name,
+      nameBn,
+      icon: input.icon?.trim() || '🏷️',
+      slug: `${slugifyCategoryName(name)}-${suffix}`,
+      kind: 'shop',
+      shopId,
+    }
+    setCustomCategories(prev => {
+      const next = [...prev, cat]
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next)) } catch {}
+      }
+      return next
+    })
+    return cat
+  }, [])
+
+  const addPlatformCategory = useCallback((input: NewCategoryInput): Category | null => {
+    const name = input.name.trim()
+    if (!name) return null
+    const nameBn = (input.nameBn?.trim() || name)
+    const suffix = Date.now().toString(36)
+    const cat: Category = {
+      id: `cat_plat_${suffix}`,
+      name,
+      nameBn,
+      icon: input.icon?.trim() || '📦',
+      slug: slugifyCategoryName(name),
+      kind: 'platform',
+    }
+    setCustomCategories(prev => {
+      const next = [...prev, cat]
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next)) } catch {}
+      }
+      return next
+    })
+    return cat
+  }, [])
+
+  const updateShopCategory = useCallback((shopId: string, categoryId: string, input: NewCategoryInput): boolean => {
+    const name = input.name.trim()
+    if (!name) return false
+    const nameBn = input.nameBn?.trim() || name
+    const icon = input.icon?.trim() || '🏷️'
+    let updated = false
+    setCustomCategories(prev => {
+      const next = prev.map(c => {
+        if (c.id !== categoryId || c.kind !== 'shop' || c.shopId !== shopId) return c
+        updated = true
+        return { ...c, name, nameBn, icon }
+      })
+      if (updated && typeof window !== 'undefined') {
+        try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next)) } catch {}
+      }
+      return next
+    })
+    return updated
+  }, [])
+
+  const getShopCategoryConfig = useCallback((shopId: string, categoryId: string): ShopCategoryConfig => {
+    const stored = shopCategoryConfigs.find(c => c.shopId === shopId && c.categoryId === categoryId)
+    if (stored) return stored
+    return buildDefaultShopCategoryConfig(shopId, categoryId)
+  }, [shopCategoryConfigs])
+
+  const saveShopCategoryConfig = useCallback((config: ShopCategoryConfig) => {
+    setShopCategoryConfigs(prev => {
+      const idx = prev.findIndex(c => c.shopId === config.shopId && c.categoryId === config.categoryId)
+      const next = idx >= 0 ? prev.map((c, i) => (i === idx ? config : c)) : [...prev, config]
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(SHOP_CATEGORY_CONFIG_KEY, JSON.stringify(next)) } catch {}
+      }
+      return next
+    })
+  }, [])
+
+  const shopCategories = useCallback(
+    (shopId: string, allowedIds: string[]) => categoriesForShop(allCategories, shopId, allowedIds),
+    [allCategories],
+  )
+
+  const globalCategories = useCallback(
+    () => globalAssignableCategories(allCategories),
+    [allCategories],
+  )
+
   return (
-    <StoreCtx.Provider value={{ shops, adminUsers, products, orders, setShops, setAdminUsers, setProducts, setOrders }}>
+    <StoreCtx.Provider value={{
+      shops, adminUsers, products, orders, allCategories,
+      setShops, setAdminUsers, setProducts, setOrders,
+      addShopCategory, addPlatformCategory, updateShopCategory, shopCategories, globalCategories,
+      getShopCategoryConfig, saveShopCategoryConfig,
+    }}>
       {children}
     </StoreCtx.Provider>
   )

@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Store, Lock, Eye, Globe, Crown, UserCog, User } from 'lucide-react'
+import { Store, Lock, Eye, Globe, Crown, UserCog, User, Shield } from 'lucide-react'
 import { z } from 'zod'
 import { useAuth, DEMO_ACCOUNTS, DEMO_PASSWORD, type AuthUser } from '@/lib/auth'
 import { useI18n, type Lang } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
-import { homeRouteForRole, canAccessAdminPath, canAccessCounter } from '@/lib/permissions'
+import { homeRouteForRole, canAccessAdminPath, canAccessCounter, canAccessSuperAdmin } from '@/lib/permissions'
 
 const loginSearchSchema = z.object({
   redirect: z.string().optional(),
@@ -23,8 +23,12 @@ function safeInternalPath(path: string | undefined): string | undefined {
   return path
 }
 
-function resolveTarget(user: AuthUser, redirectPath: string | undefined): '/admin' | '/counter' {
+function resolveTarget(
+  user: AuthUser,
+  redirectPath: string | undefined,
+): '/admin' | '/counter' | '/superadmin' {
   const safe = safeInternalPath(redirectPath)
+  if (safe?.startsWith('/superadmin') && canAccessSuperAdmin(user.role)) return '/superadmin'
   if (safe?.startsWith('/counter') && canAccessCounter(user.role)) return '/counter'
   if (safe?.startsWith('/admin') && canAccessAdminPath(user.role, safe)) return '/admin'
   return homeRouteForRole(user.role)
@@ -38,10 +42,11 @@ function clearSessionStorage() {
   } catch {}
 }
 
-const ROLE_META: Record<AuthUser['role'], { icon: typeof Crown; badgeKey: 'login.roleOwner' | 'login.roleManager' | 'login.roleStaff'; color: string }> = {
+const ROLE_META: Record<AuthUser['role'], { icon: typeof Crown; badgeKey: 'login.roleOwner' | 'login.roleManager' | 'login.roleStaff' | 'login.roleSuperAdmin'; color: string }> = {
   owner: { icon: Crown, badgeKey: 'login.roleOwner', color: 'violet' },
   manager: { icon: UserCog, badgeKey: 'login.roleManager', color: 'emerald' },
   staff: { icon: User, badgeKey: 'login.roleStaff', color: 'sky' },
+  super_admin: { icon: Shield, badgeKey: 'login.roleSuperAdmin', color: 'violet' },
 }
 
 function LoginPage() {

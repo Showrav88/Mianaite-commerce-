@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { z } from 'zod'
 import { Printer, Download, Search, Check, Package, Settings2, QrCode, Barcode } from 'lucide-react'
-import { useAdminStore, ALL_CATEGORIES, fmt, effectivePrice, type AdminProduct } from '@/lib/admin-store'
+import { useAdminStore, fmt, effectivePrice, type AdminProduct, type Category } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import {
@@ -21,7 +22,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
+const labelsSearchSchema = z.object({
+  pick: z.string().optional(),
+})
+
 export const Route = createFileRoute('/admin/labels')({
+  validateSearch: labelsSearchSchema,
   component: LabelsPage,
   head: () => ({ meta: [{ title: 'Label Builder — 1to99' }] }),
 })
@@ -47,8 +53,8 @@ const TEMPLATES: LabelTemplate[] = [
   { id: 'large', name: 'Large', namebn: 'বড়', size: '100×70mm', description: 'Electronics', descriptionbn: 'ইলেকট্রনিক্স', widthMm: 100, heightMm: 70, cols: 2, rows: 4 },
 ]
 
-function productToLabelEntry(p: AdminProduct, shopName: string): LabelEntry {
-  const cat = ALL_CATEGORIES.find(c => c.id === p.categoryId)
+function productToLabelEntry(p: AdminProduct, shopName: string, categories: Category[]): LabelEntry {
+  const cat = categories.find(c => c.id === p.categoryId)
   const sizeLine = p.tags?.[0] ?? cat?.name ?? ''
   return {
     productId: p.id,
@@ -187,7 +193,8 @@ const FIELD_META: { key: LabelFieldKey; en: string; bn: string }[] = [
 
 function LabelsPage() {
   const { user } = useAuth()
-  const { products, shops } = useAdminStore()
+  const { pick } = Route.useSearch()
+  const { products, shops, allCategories } = useAdminStore()
   const { t, lang, tx } = useI18n()
 
   const shop = shops.find(s => s.id === user?.shopId)
@@ -211,6 +218,12 @@ function LabelsPage() {
     [products, user?.shopId],
   )
 
+  useEffect(() => {
+    if (!pick) return
+    const exists = myProducts.some(p => p.id === pick)
+    if (exists) setSelected(new Set([pick]))
+  }, [pick, myProducts])
+
   const filtered = useMemo(() => {
     const q = query.toLowerCase()
     return myProducts.filter(p =>
@@ -222,7 +235,7 @@ function LabelsPage() {
     const list: LabelEntry[] = []
     for (const p of myProducts) {
       if (!selected.has(p.id)) continue
-      const entry = productToLabelEntry(p, shopName)
+      const entry = productToLabelEntry(p, shopName, allCategories)
       for (let i = 0; i < Math.max(1, style.copiesPerProduct); i++) list.push(entry)
     }
     return list
@@ -257,7 +270,7 @@ function LabelsPage() {
   }
 
   const sampleEntry = previewEntries[0] ?? (myProducts[0]
-    ? productToLabelEntry(myProducts[0], shopName)
+    ? productToLabelEntry(myProducts[0], shopName, allCategories)
     : null)
 
   return (
@@ -371,7 +384,7 @@ function LabelsPage() {
               <p className="text-xs text-muted-foreground p-4 text-center">{tx('No active products.', 'কোনো সক্রিয় পণ্য নেই।')}</p>
             ) : filtered.map(p => {
               const isSelected = selected.has(p.id)
-              const cat = ALL_CATEGORIES.find(c => c.id === p.categoryId)
+              const cat = allCategories.find(c => c.id === p.categoryId)
               return (
                 <div
                   key={p.id}

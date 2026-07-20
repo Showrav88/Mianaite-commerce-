@@ -70,6 +70,8 @@ export interface SupplierDeal {
   paymentMethod?: WalletTransaction['method']
   walletTxnId?: string
   productIdsCreated?: string[]
+  /** Product id per deal line index (same order as items). */
+  productIdsByLine?: string[]
   createdAt: string
 }
 
@@ -91,6 +93,7 @@ interface OfficeStoreCtx {
     method: WalletTransaction['method']
   ) => { ok: true } | { ok: false; reason: 'not_found' | 'wrong_status' | 'insufficient_balance' }
   markDealReceived: (dealId: string, productIds: string[]) => void
+  registerDealLineProduct: (dealId: string, lineIndex: number, productId: string) => void
 }
 
 const WALLET_KEY = '1to99_wallet_v2'
@@ -235,6 +238,25 @@ export function OfficeStoreProvider({ children }: { children: ReactNode }) {
       : d))
   }, [])
 
+  const registerDealLineProduct = useCallback((dealId: string, lineIndex: number, productId: string) => {
+    setSupplierDeals(prev => prev.map(d => {
+      if (d.id !== dealId) return d
+      const byLine = [...(d.productIdsByLine ?? d.items.map(() => ''))]
+      if (lineIndex >= 0 && lineIndex < byLine.length) byLine[lineIndex] = productId
+      const productIds = byLine.filter(Boolean)
+      const allDone = d.items.every((it, i) => {
+        if (!it.name.trim() || !it.sku.trim()) return true
+        return Boolean(byLine[i])
+      })
+      return {
+        ...d,
+        productIdsByLine: byLine,
+        productIdsCreated: productIds,
+        status: allDone ? 'received' as const : d.status,
+      }
+    }))
+  }, [])
+
   return (
     <Ctx.Provider value={{
       wallet,
@@ -251,6 +273,7 @@ export function OfficeStoreProvider({ children }: { children: ReactNode }) {
       createSupplierDeal,
       paySupplierDeal,
       markDealReceived,
+      registerDealLineProduct,
     }}
     >
       {children}

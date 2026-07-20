@@ -33,6 +33,7 @@ import { Route as CounterShiftsRouteImport } from './routes/counter/shifts'
 import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
 import { Route as AdminSuppliersRouteImport } from './routes/admin/suppliers'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
+import { Route as AdminShiftsRouteImport } from './routes/admin/shifts'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSellRouteImport } from './routes/admin/sell'
 import { Route as AdminReturnsRouteImport } from './routes/admin/returns'
@@ -172,6 +173,11 @@ const AdminStaffRoute = AdminStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminShiftsRoute = AdminShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/shifts': typeof AdminShiftsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/suppliers': typeof AdminSuppliersRoute
   '/admin/wallet': typeof AdminWalletRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/shifts': typeof AdminShiftsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/suppliers': typeof AdminSuppliersRoute
   '/admin/wallet': typeof AdminWalletRoute
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/shifts': typeof AdminShiftsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/suppliers': typeof AdminSuppliersRoute
   '/admin/wallet': typeof AdminWalletRoute
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/admin/returns'
     | '/admin/sell'
     | '/admin/settings'
+    | '/admin/shifts'
     | '/admin/staff'
     | '/admin/suppliers'
     | '/admin/wallet'
@@ -456,6 +466,7 @@ export interface FileRouteTypes {
     | '/admin/returns'
     | '/admin/sell'
     | '/admin/settings'
+    | '/admin/shifts'
     | '/admin/staff'
     | '/admin/suppliers'
     | '/admin/wallet'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/admin/returns'
     | '/admin/sell'
     | '/admin/settings'
+    | '/admin/shifts'
     | '/admin/staff'
     | '/admin/suppliers'
     | '/admin/wallet'
@@ -709,6 +721,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStaffRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/shifts': {
+      id: '/admin/shifts'
+      path: '/shifts'
+      fullPath: '/admin/shifts'
+      preLoaderRoute: typeof AdminShiftsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -848,6 +867,7 @@ interface AdminRouteChildren {
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminSellRoute: typeof AdminSellRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminShiftsRoute: typeof AdminShiftsRoute
   AdminStaffRoute: typeof AdminStaffRoute
   AdminSuppliersRoute: typeof AdminSuppliersRoute
   AdminWalletRoute: typeof AdminWalletRoute
@@ -867,6 +887,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReturnsRoute: AdminReturnsRoute,
   AdminSellRoute: AdminSellRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminShiftsRoute: AdminShiftsRoute,
   AdminStaffRoute: AdminStaffRoute,
   AdminSuppliersRoute: AdminSuppliersRoute,
   AdminWalletRoute: AdminWalletRoute,

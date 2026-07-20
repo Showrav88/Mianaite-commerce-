@@ -2,11 +2,17 @@ import type { AuthUser } from './auth'
 
 export type ShopRole = AuthUser['role']
 
-export function homeRouteForRole(role: ShopRole): '/admin' | '/counter' {
+export function homeRouteForRole(role: ShopRole): '/admin' | '/counter' | '/superadmin' {
+  if (role === 'super_admin') return '/superadmin'
   return role === 'staff' ? '/counter' : '/admin'
 }
 
+export function canAccessSuperAdmin(role: ShopRole): boolean {
+  return role === 'super_admin'
+}
+
 export function canAccessAdminPath(role: ShopRole, path: string): boolean {
+  if (role === 'super_admin') return false
   if (role === 'owner') return true
   if (role === 'manager') {
     const blocked = ['/admin/staff', '/admin/wallet', '/admin/settings']
@@ -19,6 +25,7 @@ export function canAccessAdminPath(role: ShopRole, path: string): boolean {
       path.startsWith('/admin/sell') ||
       path.startsWith('/admin/suppliers') ||
       path.startsWith('/admin/reports') ||
+      path.startsWith('/admin/shifts') ||
       path.startsWith('/admin/catalog/categories')
     )
   }
@@ -40,6 +47,7 @@ export function canEditCatalog(role: ShopRole): boolean {
 }
 
 export function canAccessCounter(role: ShopRole): boolean {
+  if (role === 'super_admin') return false
   return role === 'owner' || role === 'manager' || role === 'staff'
 }
 
@@ -53,11 +61,13 @@ export function navSectionsForRole(role: ShopRole): { title: string; titleBn: st
   const ops = [
     { to: '/admin/inventory', labelKey: 'nav.inventory' },
     { to: '/admin/sell', labelKey: 'nav.counterPos' },
+    { to: '/counter', labelKey: 'nav.fullPos' },
     { to: '/admin/labels', labelKey: 'nav.labels' },
   ]
   const finance = [
     { to: '/admin/suppliers', labelKey: 'nav.suppliers' },
     { to: '/admin/reports', labelKey: 'nav.reports' },
+    { to: '/admin/shifts', labelKey: 'nav.shifts' },
     { to: '/admin/wallet', labelKey: 'nav.wallet' },
     { to: '/admin/staff', labelKey: 'nav.staff' },
   ]
@@ -74,9 +84,11 @@ export function navSectionsForRole(role: ShopRole): { title: string; titleBn: st
       { title: 'Operations', titleBn: 'অপারেশন', items: [
         { to: '/admin/inventory', labelKey: 'nav.inventory' },
         { to: '/admin/sell', labelKey: 'nav.counterPos' },
+        { to: '/counter', labelKey: 'nav.fullPos' },
         { to: '/admin/labels', labelKey: 'nav.labels' },
         { to: '/admin/suppliers', labelKey: 'nav.suppliers' },
         { to: '/admin/reports', labelKey: 'nav.reports' },
+        { to: '/admin/shifts', labelKey: 'nav.shifts' },
       ]},
     ]
   }

@@ -42,8 +42,9 @@ export function ConfirmDialog({
         </AlertDialogHeader>
         {children ? <div className="text-sm space-y-2 py-1">{children}</div> : null}
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogCancel type="button">{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
+            type="button"
             className={cn(variant === 'destructive' && 'bg-red-600 hover:bg-red-700')}
             onClick={e => {
               e.preventDefault()

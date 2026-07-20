@@ -27,6 +27,7 @@ const ITEM_ICON: Record<string, ElementType> = {
   '/admin/sell': ScanLine,
   '/admin/labels': Printer,
   '/admin/reports': FileBarChart,
+  '/admin/shifts': FileBarChart,
   '/admin/suppliers': Truck,
   '/admin/wallet': Wallet,
   '/admin/staff': Users,
