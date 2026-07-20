@@ -66,7 +66,7 @@ export function MarketStoreProvider({ children }: { children: ReactNode }) {
     load('market_deals_v1', INITIAL_DEALS)
   )
   const [orders, setOrders] = useState<MarketOrder[]>(() =>
-    load('market_orders_v1', MARKET_ORDERS)
+    load('1to99_counter_orders_v1', [] as MarketOrder[])
   )
   const [counterCart, setCounterCart] = useState<CartItem[]>([])
   const [currentShift, setCurrentShift] = useState<CounterShift | null>(() =>
@@ -75,7 +75,7 @@ export function MarketStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { save('market_returns_v1', returns) }, [returns])
   useEffect(() => { save('market_deals_v1', deals) }, [deals])
-  useEffect(() => { save('market_orders_v1', orders) }, [orders])
+  useEffect(() => { save('1to99_counter_orders_v1', orders) }, [orders])
   useEffect(() => { save('market_counter_v1', currentShift) }, [currentShift])
 
   const updateReturnStatus = useCallback((id: string, status: ReturnStatus, extra: Partial<MarketReturn> = {}) => {

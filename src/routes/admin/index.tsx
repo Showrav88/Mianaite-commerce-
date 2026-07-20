@@ -41,7 +41,7 @@ function AdminDashboard() {
   const { user } = useAuth()
   const { products, shops } = useAdminStore()
   const { orders: posOrdersAll, currentShift } = useMarketStore()
-  const { wallet, supplierDeals } = useOfficeStore()
+  const { wallet, supplierDeals, suppliers } = useOfficeStore()
   const { t, lang, tx } = useI18n()
 
   const shop = shops.find(s => s.id === user?.shopId)
@@ -64,6 +64,7 @@ function AdminDashboard() {
   const balance = walletBalance(wallet)
   const pendingDeals = supplierDeals.filter(d => d.status === 'awaiting_payment')
   const paidAwaitingStock = supplierDeals.filter(d => d.status === 'paid')
+  const freshStart = wallet.length === 0 && suppliers.length === 0 && myProducts.length === 0
 
   const weekChart = useMemo(() => {
     const byDay = groupSalesByDay(counterOrders)
@@ -94,6 +95,24 @@ function AdminDashboard() {
           </span>
         )}
       </div>
+
+      {freshStart && (
+        <Card className="border-2 border-dashed border-orange-200 bg-orange-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">{tx('Getting started (empty shop)', 'শুরু করুন — খালি দোকান')}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2 text-muted-foreground">
+            <ol className="list-decimal pl-5 space-y-1">
+              <li><Link to="/admin/wallet" className="text-orange-600 font-medium hover:underline">{tx('Wallet — manual deposit', 'ওয়ালেট — জমা')}</Link></li>
+              <li><Link to="/admin/suppliers" className="text-orange-600 font-medium hover:underline">{tx('Suppliers — add & create deal', 'সাপ্লায়ার ও ডিল')}</Link></li>
+              <li>{tx('Pay deal (confirm popup) — wallet charged', 'ডিল পেমেন্ট — ওয়ালেট কাটা')}</li>
+              <li><Link to="/admin/catalog/products/$id" params={{ id: 'new' }} className="text-orange-600 font-medium hover:underline">{tx('Or add products / stock manually', 'অথবা পণ্য/স্টক ম্যানুয়াল')}</Link></li>
+              <li><Link to="/admin/sell" className="text-orange-600 font-medium hover:underline">{tx('Counter sale — income to wallet', 'কাউন্টার বিক্রয়')}</Link></li>
+              <li><Link to="/admin/reports" className="text-orange-600 font-medium hover:underline">{tx('Reports — profit check', 'রিপোর্ট — লাভ')}</Link></li>
+            </ol>
+          </CardContent>
+        </Card>
+      )}
 
       {(lowStockItems.length > 0 || outOfStock.length > 0) && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">

@@ -3,7 +3,10 @@ import { useState, useRef, useEffect } from 'react'
 import { Plus, Minus, Trash2, Receipt, Search, CheckCircle, Printer } from 'lucide-react'
 import { useAdminStore, fmt, effectivePrice, type AdminProduct } from '@/lib/admin-store'
 import { ProductThumb } from '@/components/office/ProductThumb'
+import { ConfirmDialog } from '@/components/office/ConfirmDialog'
 import { useCustomerStore } from '@/lib/customer-store'
+import { useMarketStore } from '@/lib/market-store'
+import { useOfficeStore } from '@/lib/office-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -38,6 +41,8 @@ function SellPage() {
   const { user } = useAuth()
   const { products, shops, setProducts } = useAdminStore()
   const { registerCustomer, placeCustomerOrder } = useCustomerStore()
+  const { addOrder } = useMarketStore()
+  const { addWalletTxn } = useOfficeStore()
   const { lang, tx } = useI18n()
 
   const shop = shops.find(s => s.id === user?.shopId)
@@ -52,6 +57,7 @@ function SellPage() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [completing, setCompleting] = useState(false)
+  const [saleConfirmOpen, setSaleConfirmOpen] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { searchRef.current?.focus() }, [])
@@ -88,8 +94,8 @@ function SellPage() {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0)
   const canComplete = cart.length > 0 && customerName.trim() && customerPhone.trim()
 
-  function completeSale() {
-    if (!canComplete || !shop) return
+  function executeSale() {
+    if (!canComplete || !shop || !user?.shopId) return
     setCompleting(true)
 
     const customer = registerCustomer({
@@ -116,8 +122,48 @@ function SellPage() {
     )
 
     const now = new Date()
+    const invoiceNo = 'INV-' + now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + '-' + Date.now().toString().slice(-5)
+    const day = now.toISOString().slice(0, 10)
+
+    addWalletTxn({
+      type: 'sell',
+      amount: total,
+      method: 'cash',
+      note: `Counter sale ${invoiceNo}`,
+    })
+
+    addOrder({
+      id: `ord_${Date.now()}`,
+      orderNumber: invoiceNo,
+      shopId: user.shopId,
+      source: 'counter',
+      status: 'delivered',
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      items: cart.map(i => {
+        const p = products.find(x => x.id === i.productId)
+        return {
+          productId: i.productId,
+          productName: i.name,
+          variantId: i.productId,
+          variantSku: p?.sku ?? '',
+          variantLabel: 'Standard',
+          qty: i.qty,
+          unitPrice: i.price,
+          subtotal: i.price * i.qty,
+        }
+      }),
+      subtotal: total,
+      discount: 0,
+      total,
+      paymentMethod: 'cash',
+      createdAt: day,
+      updatedAt: day,
+      cashier: user.name,
+    })
+
     setInvoice({
-      invoiceNo: 'INV-' + now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + '-' + Date.now().toString().slice(-5),
+      invoiceNo,
       shopName: shop.name,
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
@@ -271,7 +317,7 @@ function SellPage() {
             className="w-full text-white h-11 text-base font-semibold"
             style={{ backgroundColor: primaryColor }}
             disabled={!canComplete || completing}
-            onClick={completeSale}
+            onClick={() => setSaleConfirmOpen(true)}
           >
             {completing
               ? (tx('Processing…', 'প্রক্রিয়া হচ্ছে…'))
@@ -355,6 +401,25 @@ function SellPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={saleConfirmOpen}
+        onOpenChange={setSaleConfirmOpen}
+        title={tx('Confirm sale', 'বিক্রি নিশ্চিত করুন')}
+        description={tx(
+          'Stock will decrease and sale income will be added to your wallet. Review before confirming.',
+          'স্টক কমবে এবং ওয়ালেটে বিক্রয় যোগ হবে। নিশ্চিত করার আগে দেখুন।',
+        )}
+        confirmLabel={tx('Yes, complete sale', 'হ্যাঁ, বিক্রি সম্পন্ন')}
+        cancelLabel={tx('Cancel', 'বাতিল')}
+        onConfirm={executeSale}
+      >
+        <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+          <li>{tx('Items', 'পণ্য')}: {cart.length}</li>
+          <li className="font-semibold text-foreground">{tx('Total', 'মোট')}: {fmt(total)}</li>
+          <li>{tx('Customer', 'গ্রাহক')}: {customerName.trim()}</li>
+        </ul>
+      </ConfirmDialog>
     </div>
   )
 }

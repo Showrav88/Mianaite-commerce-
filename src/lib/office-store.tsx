@@ -93,47 +93,15 @@ interface OfficeStoreCtx {
   markDealReceived: (dealId: string, productIds: string[]) => void
 }
 
-const WALLET_KEY = '1to99_wallet_v1'
-const STAFF_KEY = '1to99_staff_v1'
-const SUPPLIERS_KEY = '1to99_suppliers_v1'
-const DEALS_KEY = '1to99_supplier_deals_v1'
+const WALLET_KEY = '1to99_wallet_v2'
+const STAFF_KEY = '1to99_staff_v2'
+const SUPPLIERS_KEY = '1to99_suppliers_v2'
+const DEALS_KEY = '1to99_supplier_deals_v2'
 
-const INITIAL_WALLET: WalletTransaction[] = [
-  { id: 'w0', type: 'deposit', amount: 250000, method: 'bank', note: 'Opening capital — manual deposit', createdAt: '2026-05-01' },
-  { id: 'w1', type: 'sell', amount: 45200, method: 'cash', note: 'Counter sales — morning shift', createdAt: '2026-05-19' },
-  { id: 'w2', type: 'sell', amount: 12800, method: 'bkash', note: 'Counter — bKash', createdAt: '2026-05-19' },
-  { id: 'w3', type: 'buy', amount: 85000, method: 'cash', note: 'Wholesale stock purchase', createdAt: '2026-05-18' },
-  { id: 'w4', type: 'expense', amount: 3500, method: 'nagad', note: 'Shop rent (partial)', createdAt: '2026-05-17' },
-  { id: 'w5', type: 'loan', amount: 20000, method: 'cash', note: 'Loan to supplier — 30 days', createdAt: '2026-05-15' },
-]
-
-const INITIAL_STAFF: StaffMember[] = [
-  { id: 'st_1', name: 'Karim Ahmed', role: 'manager', phone: '01711234567', monthlySalary: 22000, lastPaidAt: '2026-05-01', active: true },
-  { id: 'st_2', name: 'Sadia Islam', role: 'staff', phone: '01822334455', monthlySalary: 14000, lastPaidAt: '2026-05-01', active: true },
-  { id: 'st_3', name: 'Rafiq Hossain', role: 'staff', phone: '01933445566', monthlySalary: 13500, active: true },
-]
-
-const INITIAL_SUPPLIERS: Supplier[] = [
-  { id: 'sup_1', name: 'Mirpur Wholesale Hub', phone: '01712345678', address: 'Mirpur-10, Dhaka', notes: 'Stationery & home goods' },
-  { id: 'sup_2', name: 'Old Dhaka Import Co.', phone: '01887654321', address: 'Chawkbazar', notes: 'Cosmetics, kitchen' },
-]
-
-const INITIAL_DEALS: SupplierDeal[] = [
-  {
-    id: 'deal_1',
-    supplierId: 'sup_1',
-    reference: 'PO-2026-0512',
-    status: 'awaiting_payment',
-    items: [
-      { name: 'Notebook A4 (80pg)', sku: '1T99-STN-010', qty: 200, unitCost: 45, salePrice: 75, categoryId: 'cat_books' },
-      { name: 'Ball Pen Box (50pcs)', sku: '1T99-STN-011', qty: 40, unitCost: 120, salePrice: 180, categoryId: 'cat_books' },
-    ],
-    travelExpense: 350,
-    driverBill: 500,
-    otherExpense: 0,
-    createdAt: '2026-05-12',
-  },
-]
+const INITIAL_WALLET: WalletTransaction[] = []
+const INITIAL_STAFF: StaffMember[] = []
+const INITIAL_SUPPLIERS: Supplier[] = []
+const INITIAL_DEALS: SupplierDeal[] = []
 
 function load<T>(key: string, fallback: T): T {
   try {

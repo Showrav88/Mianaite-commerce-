@@ -380,17 +380,24 @@ const StoreCtx = createContext<AdminStore>({
   setShops: () => {}, setAdminUsers: () => {}, setProducts: () => {}, setOrders: () => {},
 })
 
+/** Office POS shop — no seeded demo products; start empty until stock-in. */
+export const OFFICE_SHOP_ID = 'shop_6'
+
 /** Demo persistence until a real API exists (same browser only). */
-const PRODUCTS_LOCAL_KEY = 'banglaflow_admin_products_v2'
+const PRODUCTS_LOCAL_KEY = 'banglaflow_admin_products_v3'
 const SHOPS_LOCAL_KEY = 'banglaflow_admin_shops_v2'
 
 const REMOVED_PRODUCT_IDS = new Set(['p13', 'p15'])
 
-function mergeProducts(stored: AdminProduct[]): AdminProduct[] {
+function mergeProducts(stored: AdminProduct[] | null): AdminProduct[] {
+  const seed = INITIAL_PRODUCTS.filter(p => p.shopId !== OFFICE_SHOP_ID)
+  if (!stored || stored.length === 0) {
+    return seed.map(stripProductImages)
+  }
   const filtered = stored.filter(p => !REMOVED_PRODUCT_IDS.has(p.id))
   const storedMap = new Map(filtered.map(p => [p.id, p]))
-  const initialMerged = INITIAL_PRODUCTS.map(p => storedMap.get(p.id) ?? p)
-  const initialIds = new Set(INITIAL_PRODUCTS.map(p => p.id))
+  const initialMerged = seed.map(p => storedMap.get(p.id) ?? p)
+  const initialIds = new Set(seed.map(p => p.id))
   const additions = filtered.filter(p => !initialIds.has(p.id))
   return [...initialMerged, ...additions].map(stripProductImages)
 }
@@ -422,7 +429,8 @@ function parseStoredShops(raw: string): Shop[] | null {
 function parseStoredProducts(raw: string): AdminProduct[] | null {
   try {
     const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed) || parsed.length === 0) return null
+    if (!Array.isArray(parsed)) return null
+    if (parsed.length === 0) return []
     const first = parsed[0] as Record<string, unknown>
     if (typeof first?.id !== 'string' || typeof first?.shopId !== 'string') return null
     return parsed as AdminProduct[]
@@ -434,7 +442,7 @@ function parseStoredProducts(raw: string): AdminProduct[] | null {
 export function AdminStoreProvider({ children }: { children: ReactNode }) {
   const [shops, setShopsState] = useState<Shop[]>(INITIAL_SHOPS)
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>(INITIAL_ADMINS)
-  const [products, setProductsState] = useState<AdminProduct[]>(INITIAL_PRODUCTS)
+  const [products, setProductsState] = useState<AdminProduct[]>(() => mergeProducts(null))
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS)
 
   useEffect(() => {
@@ -448,7 +456,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
       const rawProducts = localStorage.getItem(PRODUCTS_LOCAL_KEY)
       if (rawProducts) {
         const loadedProducts = parseStoredProducts(rawProducts)
-        if (loadedProducts) setProductsState(mergeProducts(loadedProducts))
+        if (loadedProducts !== null) setProductsState(mergeProducts(loadedProducts))
       }
     } catch {
       /* ignore corrupt storage */
@@ -464,7 +472,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
         if (loaded) setShopsState(mergeShops(loaded))
       } else if (e.key === PRODUCTS_LOCAL_KEY) {
         const loaded = parseStoredProducts(e.newValue)
-        if (loaded) setProductsState(mergeProducts(loaded))
+        if (loaded !== null) setProductsState(mergeProducts(loaded))
       }
     }
     window.addEventListener('storage', onStorage)

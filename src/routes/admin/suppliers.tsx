@@ -1,17 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Truck, Plus, CreditCard, PackageCheck, AlertCircle } from 'lucide-react'
+import { Truck, Plus, CreditCard, PackageCheck, AlertCircle, ExternalLink } from 'lucide-react'
 import {
   useOfficeStore,
   walletBalance,
   dealGrandTotal,
   dealMerchandiseTotal,
+  type SupplierDeal,
   type SupplierDealLine,
 } from '@/lib/office-store'
 import { useAdminStore, ALL_CATEGORIES, fmt } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { buildProductsFromDeal } from '@/lib/pos-stats'
+import { ConfirmDialog } from '@/components/office/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,6 +36,7 @@ const emptyLine = (): SupplierDealLine => ({
 })
 
 function SuppliersPage() {
+  const navigate = useNavigate()
   const {
     suppliers,
     supplierDeals,
@@ -62,6 +65,11 @@ function SuppliersPage() {
   const [payMethod, setPayMethod] = useState<'cash' | 'bkash' | 'nagad' | 'bank'>('cash')
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
+  const [supplierConfirmOpen, setSupplierConfirmOpen] = useState(false)
+  const [dealConfirmOpen, setDealConfirmOpen] = useState(false)
+  const [payDealTarget, setPayDealTarget] = useState<SupplierDeal | null>(null)
+  const [receiveDealTarget, setReceiveDealTarget] = useState<SupplierDeal | null>(null)
+
   if (user?.role === 'staff') {
     return <div className="p-6 text-sm text-muted-foreground">{tx('Owner or manager only.', 'শুধু মালিক/ম্যানেজার।')}</div>
   }
@@ -74,6 +82,10 @@ function SuppliersPage() {
   function addSupplierSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!supName.trim() || !supPhone.trim()) return
+    setSupplierConfirmOpen(true)
+  }
+
+  function executeAddSupplier() {
     addSupplier({ name: supName.trim(), phone: supPhone.trim(), address: supAddress.trim() || undefined })
     setSupName('')
     setSupPhone('')
@@ -86,6 +98,11 @@ function SuppliersPage() {
     if (!dealSupplierId || !dealRef.trim()) return
     const validLines = lines.filter(l => l.name.trim() && l.sku.trim() && l.qty > 0)
     if (validLines.length === 0) return
+    setDealConfirmOpen(true)
+  }
+
+  function executeCreateDeal() {
+    const validLines = lines.filter(l => l.name.trim() && l.sku.trim() && l.qty > 0)
     createSupplierDeal({
       supplierId: dealSupplierId,
       reference: dealRef.trim(),
@@ -104,26 +121,31 @@ function SuppliersPage() {
     setTravel('0')
     setDriver('0')
     setOther('0')
-    flash('ok', tx('Purchase deal created — pay wallet before stock-in.', 'ক্রয় ডিল তৈরি — স্টকের আগে ওয়ালেটে পেমেন্ট করুন।'))
+    flash('ok', tx('Deal saved. Pay wallet when ready — stock is a separate step.', 'ডিল সংরক্ষিত। প্রস্তুত হলে পেমেন্ট করুন — স্টক আলাদা ধাপ।'))
   }
 
-  function payDeal(dealId: string) {
-    const res = paySupplierDeal(dealId, payMethod)
+  function executePayDeal() {
+    if (!payDealTarget) return
+    const res = paySupplierDeal(payDealTarget.id, payMethod)
     if (!res.ok) {
       if (res.reason === 'insufficient_balance') flash('err', tx('Insufficient wallet balance.', 'ওয়ালেটে পর্যাপ্ত টাকা নেই।'))
       else flash('err', tx('Cannot pay this deal.', 'এই ডিল পরিশোধ করা যাচ্ছে না।'))
       return
     }
-    flash('ok', tx('Deal paid — wallet charged. Now receive to stock.', 'ডিল পরিশোধ — ওয়ালেট কাটা হয়েছে। এখন স্টকে নিন।'))
+    flash('ok', tx('Payment recorded. Use “Receive to stock” when goods arrive.', 'পেমেন্ট রেকর্ড হয়েছে। মাল এলে “স্টকে নিন” ব্যবহার করুন।'))
   }
 
-  function receiveStock(dealId: string) {
-    const deal = supplierDeals.find(d => d.id === dealId)
+  function executeReceiveStock() {
+    const deal = receiveDealTarget
     if (!deal || deal.status !== 'paid' || !user?.shopId) return
     const newProducts = buildProductsFromDeal(deal, user.shopId)
     setProducts([...products, ...newProducts])
-    markDealReceived(dealId, newProducts.map(p => p.id))
+    markDealReceived(deal.id, newProducts.map(p => p.id))
     flash('ok', tx('Products created and stock added.', 'পণ্য তৈরি ও স্টক যোগ হয়েছে।'))
+  }
+
+  function goManualStock() {
+    navigate({ to: '/admin/catalog/products/$id', params: { id: 'new' } })
   }
 
   const statusBadge = (status: string) => {
@@ -141,6 +163,8 @@ function SuppliersPage() {
     return <Badge className={map[status] ?? ''}>{tx(en, bn)}</Badge>
   }
 
+  const payTotal = payDealTarget ? dealGrandTotal(payDealTarget) : 0
+
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div>
@@ -150,8 +174,8 @@ function SuppliersPage() {
         </h1>
         <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
           {tx(
-            'Flow: supplier → deal (items + travel/driver cost) → pay from wallet → receive creates products & stock. No payment, no stock.',
-            'ধাপ: সাপ্লায়ার → ডিল (মাল + ভাড়া/ড্রাইভার) → ওয়ালেটে পেমেন্ট → রিসিভ করলে পণ্য ও স্টক। পেমেন্ট ছাড়া স্টক নয়।',
+            '1) Deposit wallet → 2) Add supplier → 3) Create deal → 4) Pay deal (wallet) → 5) Receive stock. Payment and stock are separate steps.',
+            '১) ওয়ালেটে জমা → ২) সাপ্লায়ার → ৩) ডিল → ৪) পেমেন্ট → ৫) স্টক। পেমেন্ট ও স্টক আলাদা।',
           )}
         </p>
         <p className="text-sm mt-2">{tx('Wallet balance', 'ওয়ালেট')}: <strong className="text-orange-600">{fmt(balance)}</strong></p>
@@ -178,21 +202,25 @@ function SuppliersPage() {
                 <div><Label>{tx('Name', 'নাম')}</Label><Input value={supName} onChange={e => setSupName(e.target.value)} required /></div>
                 <div><Label>{tx('Phone', 'ফোন')}</Label><Input value={supPhone} onChange={e => setSupPhone(e.target.value)} required /></div>
                 <div><Label>{tx('Address', 'ঠিকানা')}</Label><Input value={supAddress} onChange={e => setSupAddress(e.target.value)} /></div>
-                <Button type="submit" className="gap-2"><Plus className="w-4 h-4" />{tx('Save', 'সংরক্ষণ')}</Button>
+                <Button type="submit" className="gap-2"><Plus className="w-4 h-4" />{tx('Review & save', 'দেখুন ও সংরক্ষণ')}</Button>
               </form>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm">
             <CardHeader><CardTitle className="text-base">{tx('Supplier list', 'তালিকা')}</CardTitle></CardHeader>
             <CardContent className="p-0">
-              <ul className="divide-y">
-                {suppliers.map(s => (
-                  <li key={s.id} className="px-4 py-3">
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.phone}{s.address ? ` · ${s.address}` : ''}</p>
-                  </li>
-                ))}
-              </ul>
+              {suppliers.length === 0 ? (
+                <p className="px-4 py-8 text-sm text-muted-foreground text-center">{tx('No suppliers yet.', 'এখনো সাপ্লায়ার নেই।')}</p>
+              ) : (
+                <ul className="divide-y">
+                  {suppliers.map(s => (
+                    <li key={s.id} className="px-4 py-3">
+                      <p className="font-medium">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">{s.phone}{s.address ? ` · ${s.address}` : ''}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -203,48 +231,49 @@ function SuppliersPage() {
           <Card className="border-0 shadow-sm">
             <CardHeader><CardTitle className="text-base">{tx('New purchase deal', 'নতুন ক্রয় ডিল')}</CardTitle></CardHeader>
             <CardContent>
-              <form onSubmit={createDealSubmit} className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>{tx('Supplier', 'সাপ্লায়ার')}</Label>
-                    <Select value={dealSupplierId} onValueChange={setDealSupplierId}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div><Label>{tx('Reference / PO', 'রেফারেন্স')}</Label><Input value={dealRef} onChange={e => setDealRef(e.target.value)} placeholder="PO-2026-0001" required /></div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{tx('Line items', 'পণ্যের লাইন')}</Label>
-                  {lines.map((line, i) => (
-                    <div key={i} className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end border rounded-lg p-2">
-                      <Input placeholder={tx('Name', 'নাম')} value={line.name} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, name: e.target.value } : l))} />
-                      <Input placeholder="SKU" value={line.sku} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, sku: e.target.value } : l))} />
-                      <Input type="number" min={1} placeholder="Qty" value={line.qty || ''} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, qty: Number(e.target.value) } : l))} />
-                      <Input type="number" min={0} placeholder={tx('Cost', 'ক্রয়')} value={line.unitCost || ''} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, unitCost: Number(e.target.value) } : l))} />
-                      <Input type="number" min={0} placeholder={tx('Sale', 'বিক্রয়')} value={line.salePrice || ''} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, salePrice: Number(e.target.value) } : l))} />
-                      <Select value={line.categoryId} onValueChange={v => setLines(prev => prev.map((l, j) => j === i ? { ...l, categoryId: v } : l))}>
+              {suppliers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{tx('Add a supplier first.', 'আগে সাপ্লায়ার যোগ করুন।')}</p>
+              ) : (
+                <form onSubmit={createDealSubmit} className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>{tx('Supplier', 'সাপ্লায়ার')}</Label>
+                      <Select value={dealSupplierId || suppliers[0]?.id} onValueChange={setDealSupplierId}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {ALL_CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                          {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" onClick={() => setLines(prev => [...prev, emptyLine()])}>{tx('Add line', 'লাইন যোগ')}</Button>
-                </div>
-
-                <div className="grid sm:grid-cols-3 gap-3">
-                  <div><Label>{tx('Travel expense', 'ভ্রমণ খরচ')}</Label><Input type="number" min={0} value={travel} onChange={e => setTravel(e.target.value)} /></div>
-                  <div><Label>{tx('Driver bill', 'ড্রাইভার বিল')}</Label><Input type="number" min={0} value={driver} onChange={e => setDriver(e.target.value)} /></div>
-                  <div><Label>{tx('Other', 'অন্যান্য')}</Label><Input type="number" min={0} value={other} onChange={e => setOther(e.target.value)} /></div>
-                </div>
-
-                <Button type="submit" className="gap-2"><Plus className="w-4 h-4" />{tx('Create deal', 'ডিল তৈরি')}</Button>
-              </form>
+                    <div><Label>{tx('Reference / PO', 'রেফারেন্স')}</Label><Input value={dealRef} onChange={e => setDealRef(e.target.value)} placeholder="PO-2026-0001" required /></div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{tx('Line items', 'পণ্যের লাইন')}</Label>
+                    {lines.map((line, i) => (
+                      <div key={i} className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end border rounded-lg p-2">
+                        <Input placeholder={tx('Name', 'নাম')} value={line.name} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, name: e.target.value } : l))} />
+                        <Input placeholder="SKU" value={line.sku} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, sku: e.target.value } : l))} />
+                        <Input type="number" min={1} placeholder="Qty" value={line.qty || ''} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, qty: Number(e.target.value) } : l))} />
+                        <Input type="number" min={0} placeholder={tx('Cost', 'ক্রয়')} value={line.unitCost || ''} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, unitCost: Number(e.target.value) } : l))} />
+                        <Input type="number" min={0} placeholder={tx('Sale', 'বিক্রয়')} value={line.salePrice || ''} onChange={e => setLines(prev => prev.map((l, j) => j === i ? { ...l, salePrice: Number(e.target.value) } : l))} />
+                        <Select value={line.categoryId} onValueChange={v => setLines(prev => prev.map((l, j) => j === i ? { ...l, categoryId: v } : l))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {ALL_CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" onClick={() => setLines(prev => [...prev, emptyLine()])}>{tx('Add line', 'লাইন যোগ')}</Button>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div><Label>{tx('Travel expense', 'ভ্রমণ খরচ')}</Label><Input type="number" min={0} value={travel} onChange={e => setTravel(e.target.value)} /></div>
+                    <div><Label>{tx('Driver bill', 'ড্রাইভার বিল')}</Label><Input type="number" min={0} value={driver} onChange={e => setDriver(e.target.value)} /></div>
+                    <div><Label>{tx('Other', 'অন্যান্য')}</Label><Input type="number" min={0} value={other} onChange={e => setOther(e.target.value)} /></div>
+                  </div>
+                  <Button type="submit" className="gap-2"><Plus className="w-4 h-4" />{tx('Review & create deal', 'দেখুন ও ডিল তৈরি')}</Button>
+                </form>
+              )}
             </CardContent>
           </Card>
 
@@ -265,50 +294,123 @@ function SuppliersPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ul className="divide-y">
-                {supplierDeals.map(deal => {
-                  const sup = suppliers.find(s => s.id === deal.supplierId)
-                  const merch = dealMerchandiseTotal(deal)
-                  const total = dealGrandTotal(deal)
-                  return (
-                    <li key={deal.id} className="px-4 py-4 space-y-2">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <p className="font-semibold">{deal.reference}</p>
-                          <p className="text-xs text-muted-foreground">{sup?.name} · {deal.createdAt}</p>
+              {supplierDeals.length === 0 ? (
+                <p className="px-4 py-8 text-sm text-muted-foreground text-center">{tx('No deals yet.', 'এখনো ডিল নেই।')}</p>
+              ) : (
+                <ul className="divide-y">
+                  {supplierDeals.map(deal => {
+                    const sup = suppliers.find(s => s.id === deal.supplierId)
+                    const merch = dealMerchandiseTotal(deal)
+                    const total = dealGrandTotal(deal)
+                    return (
+                      <li key={deal.id} className="px-4 py-4 space-y-2">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold">{deal.reference}</p>
+                            <p className="text-xs text-muted-foreground">{sup?.name} · {deal.createdAt}</p>
+                          </div>
+                          {statusBadge(deal.status)}
                         </div>
-                        {statusBadge(deal.status)}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {tx('Merchandise', 'মাল')}: {fmt(merch)} · {tx('Travel', 'ভ্রমণ')}: {fmt(deal.travelExpense)} · {tx('Driver', 'ড্রাইভার')}: {fmt(deal.driverBill)} · {tx('Total', 'মোট')}: <strong>{fmt(total)}</strong>
-                      </p>
-                      <ul className="text-xs pl-3 list-disc text-muted-foreground">
-                        {deal.items.map((it, idx) => (
-                          <li key={idx}>{it.name} × {it.qty} @ {fmt(it.unitCost)}</li>
-                        ))}
-                      </ul>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {deal.status === 'awaiting_payment' && (
-                          <Button size="sm" className="gap-1" onClick={() => payDeal(deal.id)}>
-                            <CreditCard className="w-3.5 h-3.5" />
-                            {tx('Pay from wallet', 'ওয়ালেটে পেমেন্ট')}
-                          </Button>
-                        )}
-                        {deal.status === 'paid' && (
-                          <Button size="sm" variant="secondary" className="gap-1" onClick={() => receiveStock(deal.id)}>
-                            <PackageCheck className="w-3.5 h-3.5" />
-                            {tx('Receive to stock / create products', 'স্টকে নিন / পণ্য তৈরি')}
-                          </Button>
-                        )}
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
+                        <p className="text-xs text-muted-foreground">
+                          {tx('Merchandise', 'মাল')}: {fmt(merch)} · {tx('Travel', 'ভ্রমণ')}: {fmt(deal.travelExpense)} · {tx('Driver', 'ড্রাইভার')}: {fmt(deal.driverBill)} · {tx('Total', 'মোট')}: <strong>{fmt(total)}</strong>
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {deal.status === 'awaiting_payment' && (
+                            <>
+                              <Button size="sm" className="gap-1" onClick={() => setPayDealTarget(deal)}>
+                                <CreditCard className="w-3.5 h-3.5" />
+                                {tx('Pay from wallet', 'ওয়ালেটে পেমেন্ট')}
+                              </Button>
+                              <Button size="sm" variant="outline" className="gap-1" onClick={goManualStock}>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                {tx('Add stock manually (products)', 'ম্যানুয়াল স্টক — পণ্য পাতা')}
+                              </Button>
+                            </>
+                          )}
+                          {deal.status === 'paid' && (
+                            <Button size="sm" variant="secondary" className="gap-1" onClick={() => setReceiveDealTarget(deal)}>
+                              <PackageCheck className="w-3.5 h-3.5" />
+                              {tx('Receive to stock', 'স্টকে নিন')}
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </>
       )}
+
+      <ConfirmDialog
+        open={supplierConfirmOpen}
+        onOpenChange={setSupplierConfirmOpen}
+        title={tx('Save supplier?', 'সাপ্লায়ার সংরক্ষণ?')}
+        confirmLabel={tx('Yes, save', 'হ্যাঁ')}
+        cancelLabel={tx('Cancel', 'বাতিল')}
+        onConfirm={executeAddSupplier}
+      >
+        <p><strong>{supName}</strong> · {supPhone}</p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={dealConfirmOpen}
+        onOpenChange={setDealConfirmOpen}
+        title={tx('Create purchase deal?', 'ক্রয় ডিল তৈরি?')}
+        description={tx('This does not charge the wallet yet. You pay in a separate step.', 'এখনই ওয়ালেট কাটবে না। পেমেন্ট আলাদা ধাপ।')}
+        confirmLabel={tx('Yes, create deal', 'হ্যাঁ, ডিল তৈরি')}
+        cancelLabel={tx('Cancel', 'বাতিল')}
+        onConfirm={executeCreateDeal}
+      >
+        <p>{tx('Reference', 'রেফারেন্স')}: <strong>{dealRef}</strong></p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={!!payDealTarget}
+        onOpenChange={open => { if (!open) setPayDealTarget(null) }}
+        title={tx('Pay supplier deal?', 'সাপ্লায়ার ডিল পরিশোধ?')}
+        description={tx(
+          'Wallet will be charged. Stock is NOT added until you use “Receive to stock”.',
+          'ওয়ালেট থেকে কাটা হবে। “স্টকে নিন” না করা পর্যন্ত স্টক যোগ হবে না।',
+        )}
+        confirmLabel={tx('Yes, pay', 'হ্যাঁ, পরিশোধ')}
+        cancelLabel={tx('Cancel', 'বাতিল')}
+        variant="destructive"
+        onConfirm={executePayDeal}
+      >
+        {payDealTarget && (
+          <>
+            <p>{payDealTarget.reference}</p>
+            <p className="font-bold text-red-600">{fmt(payTotal)}</p>
+            <p className="text-xs text-muted-foreground">
+              {tx('Balance after', 'পরবর্তী ব্যালেন্স')}: {fmt(balance - payTotal)}
+            </p>
+          </>
+        )}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={!!receiveDealTarget}
+        onOpenChange={open => { if (!open) setReceiveDealTarget(null) }}
+        title={tx('Receive goods to stock?', 'স্টকে নিন?')}
+        description={tx(
+          'Creates products from this deal and adds quantities. Payment was already recorded.',
+          'ডিল থেকে পণ্য তৈরি হবে ও স্টক যোগ হবে। পেমেন্ট আগেই হয়েছে।',
+        )}
+        confirmLabel={tx('Yes, add stock', 'হ্যাঁ, স্টক যোগ')}
+        cancelLabel={tx('Cancel', 'বাতিল')}
+        onConfirm={executeReceiveStock}
+      >
+        {receiveDealTarget && (
+          <ul className="list-disc pl-4 text-muted-foreground">
+            {receiveDealTarget.items.map((it, i) => (
+              <li key={i}>{it.name} × {it.qty}</li>
+            ))}
+          </ul>
+        )}
+      </ConfirmDialog>
     </div>
   )
 }

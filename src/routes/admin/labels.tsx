@@ -1,17 +1,29 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
-import { Printer, Download, Search, Check, Package } from 'lucide-react'
-import { MARKET_PRODUCTS, fmt, getMinPrice } from '@/mock/products'
-import { MARKET_CATEGORIES } from '@/mock/categories'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { Printer, Download, Search, Check, Package, Settings2, QrCode, Barcode } from 'lucide-react'
+import { useAdminStore, ALL_CATEGORIES, fmt, effectivePrice, type AdminProduct } from '@/lib/admin-store'
+import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
+import {
+  loadLabelFields,
+  saveLabelFields,
+  loadLabelStyle,
+  saveLabelStyle,
+  type LabelFieldConfig,
+  type LabelFieldKey,
+  type LabelStyleConfig,
+} from '@/lib/label-fields'
+import { renderLabelSvgContent, openLabelsPrintWindow, type LabelEntry } from '@/lib/label-render'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/admin/labels')({
   component: LabelsPage,
-  head: () => ({ meta: [{ title: 'Label Builder — 1to99 Market Admin' }] }),
+  head: () => ({ meta: [{ title: 'Label Builder — 1to99' }] }),
 })
 
 interface LabelTemplate {
@@ -29,151 +41,194 @@ interface LabelTemplate {
 
 const TEMPLATES: LabelTemplate[] = [
   { id: 'tiny', name: 'Tiny Tag', namebn: 'ছোট ট্যাগ', size: '25×15mm', description: 'Jewellery, small accessories', descriptionbn: 'গহনা, ছোট আনুষাঙ্গিক', widthMm: 25, heightMm: 15, cols: 8, rows: 20 },
-  { id: 'standard', name: 'Standard', namebn: 'স্ট্যান্ডার্ড', size: '50×30mm', description: 'Most products — default choice', descriptionbn: 'বেশিরভাগ পণ্য — ডিফল্ট', widthMm: 50, heightMm: 30, cols: 4, rows: 9 },
-  { id: 'hang', name: 'Hang Tag', namebn: 'হ্যাং ট্যাগ', size: '40×60mm', description: 'Garments, shoes, bags', descriptionbn: 'পোশাক, জুতা, ব্যাগ', widthMm: 40, heightMm: 60, cols: 3, rows: 5 },
-  { id: 'shelf', name: 'Shelf Label', namebn: 'শেলফ লেবেল', size: '80×40mm', description: 'Shelf edge, display pricing', descriptionbn: 'শেলফ প্রান্ত, মূল্য প্রদর্শন', widthMm: 80, heightMm: 40, cols: 2, rows: 7 },
-  { id: 'large', name: 'Large', namebn: 'বড়', size: '100×70mm', description: 'Electronics, appliances', descriptionbn: 'ইলেকট্রনিক্স, যন্ত্রপাতি', widthMm: 100, heightMm: 70, cols: 2, rows: 4 },
-  { id: 'wedding', name: 'Wedding Gift Tag', namebn: 'বিবাহ উপহার ট্যাগ', size: '60×90mm', description: 'Premium gift tags', descriptionbn: 'প্রিমিয়াম গিফট ট্যাগ', widthMm: 60, heightMm: 90, cols: 2, rows: 3 },
+  { id: 'standard', name: 'Standard', namebn: 'স্ট্যান্ডার্ড', size: '50×30mm', description: 'Most products — default', descriptionbn: 'বেশিরভাগ পণ্য', widthMm: 50, heightMm: 30, cols: 4, rows: 9 },
+  { id: 'hang', name: 'Hang Tag', namebn: 'হ্যাং ট্যাগ', size: '40×60mm', description: 'Garments, shoes', descriptionbn: 'পোশাক, জুতা', widthMm: 40, heightMm: 60, cols: 3, rows: 5 },
+  { id: 'shelf', name: 'Shelf Label', namebn: 'শেলফ লেবেল', size: '80×40mm', description: 'Shelf edge pricing', descriptionbn: 'শেলফ মূল্য', widthMm: 80, heightMm: 40, cols: 2, rows: 7 },
+  { id: 'large', name: 'Large', namebn: 'বড়', size: '100×70mm', description: 'Electronics', descriptionbn: 'ইলেকট্রনিক্স', widthMm: 100, heightMm: 70, cols: 2, rows: 4 },
 ]
 
-function TemplateSvgPreview({ tpl }: { tpl: LabelTemplate }) {
-  const scale = Math.min(80 / tpl.widthMm, 60 / tpl.heightMm)
-  const w = tpl.widthMm * scale
-  const h = tpl.heightMm * scale
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${tpl.widthMm} ${tpl.heightMm}`} className="mx-auto">
-      <rect width={tpl.widthMm} height={tpl.heightMm} rx="2" fill="white" stroke="#e2e8f0" strokeWidth="0.5" />
-      {Array.from({ length: 16 }).map((_, i) => (
-        <rect key={i} x={4 + i * (tpl.widthMm > 40 ? 2.2 : 1.4)} y={tpl.heightMm * 0.55} width={tpl.widthMm > 40 ? 1.2 : 0.8} height={tpl.heightMm * 0.25} fill="#1e293b" />
-      ))}
-      <rect x={3} y={3} width={tpl.widthMm * 0.65} height={tpl.widthMm > 40 ? 3.5 : 2.5} rx="0.5" fill="#e2e8f0" />
-      <rect x={3} y={tpl.heightMm * 0.28} width={tpl.widthMm * 0.4} height={tpl.widthMm > 40 ? 4 : 2.5} rx="0.5" fill="#f97316" opacity="0.8" />
-    </svg>
-  )
+function productToLabelEntry(p: AdminProduct, shopName: string): LabelEntry {
+  const cat = ALL_CATEGORIES.find(c => c.id === p.categoryId)
+  const sizeLine = p.tags?.[0] ?? cat?.name ?? ''
+  return {
+    productId: p.id,
+    name: p.name,
+    sku: p.sku,
+    price: effectivePrice(p),
+    sizeLine,
+    shopName,
+    shopCode: '1T99',
+  }
 }
 
-function LabelSvg({
-  product,
+function LabelCell({
+  entry,
   template,
-  variant,
+  fields,
+  style,
 }: {
-  product: typeof MARKET_PRODUCTS[0]
+  entry: LabelEntry
   template: LabelTemplate
-  variant: typeof MARKET_PRODUCTS[0]['variants'][0]
+  fields: LabelFieldConfig
+  style: LabelStyleConfig
 }) {
   const W = template.widthMm
   const H = template.heightMm
-  const price = variant.price
-  const shopCode = '1T99-DHK-MRP-001'
-  const attrLabel = Object.values(variant.attributes).join(' / ') || 'Standard'
-
+  const inner = useMemo(
+    () => renderLabelSvgContent(entry, W, H, fields, style),
+    [entry, W, H, fields, style],
+  )
   return (
-    <svg width={W * 3.78} height={H * 3.78} viewBox={`0 0 ${W} ${H}`}>
-      <rect width={W} height={H} rx="1.5" fill="white" stroke="#e2e8f0" strokeWidth="0.4" />
-      <rect width={W} height={H * 0.22} rx="1.5" fill="#f97316" />
-      <text x={W / 2} y={H * 0.145} textAnchor="middle" fontSize={W > 50 ? "3.2" : "2.4"} fontFamily="Inter,sans-serif" fontWeight="700" fill="white">
-        1to99 Market
-      </text>
-      <text x={3} y={H * 0.36} fontSize={W > 50 ? "3.5" : "2.4"} fontFamily="Inter,sans-serif" fontWeight="600" fill="#1e293b">
-        {product.name.length > 22 ? product.name.slice(0, 22) + '…' : product.name}
-      </text>
-      {attrLabel !== 'Standard' && (
-        <text x={3} y={H * 0.48} fontSize="2.2" fontFamily="Inter,sans-serif" fill="#64748b">
-          {attrLabel.length > 24 ? attrLabel.slice(0, 24) + '…' : attrLabel}
-        </text>
-      )}
-      <text x={3} y={H * 0.60} fontSize="1.9" fontFamily="monospace" fill="#94a3b8">{variant.sku}</text>
-      {Array.from({ length: 16 }).map((_, i) => (
-        <rect key={i} x={3 + i * (W > 50 ? 2.5 : 1.8)} y={H * 0.65} width={W > 50 ? 1.4 : 1} height={H * 0.2} fill="#1e293b" />
-      ))}
-      <text x={W - 3} y={H * 0.93} textAnchor="end" fontSize={W > 50 ? "5" : "4"} fontFamily="Inter,sans-serif" fontWeight="800" fill="#1e293b">
-        ৳{price.toLocaleString('en-BD')}
-      </text>
-      <text x={3} y={H * 0.94} fontSize="1.6" fontFamily="monospace" fill="#94a3b8">{shopCode}</text>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="100%"
+      className="block max-w-full max-h-full"
+      role="img"
+      aria-label={entry.name}
+    >
+      <g dangerouslySetInnerHTML={{ __html: inner }} />
     </svg>
   )
 }
 
 function SheetPreview({
-  products,
+  entries,
   template,
+  fields,
+  style,
 }: {
-  products: typeof MARKET_PRODUCTS
+  entries: LabelEntry[]
   template: LabelTemplate
+  fields: LabelFieldConfig
+  style: LabelStyleConfig
 }) {
   const PAGE_W = 210
   const PAGE_H = 297
   const MARGIN = 10
   const GAP_H = 3
   const GAP_V = 3
-  const usableW = PAGE_W - MARGIN * 2
-  const usableH = PAGE_H - MARGIN * 2
   const cols = template.cols
   const rows = template.rows
+  const usableW = PAGE_W - MARGIN * 2
+  const usableH = PAGE_H - MARGIN * 2
   const cellW = (usableW - (cols - 1) * GAP_H) / cols
   const cellH = (usableH - (rows - 1) * GAP_V) / rows
+  const scale = Math.min(cellW / template.widthMm, cellH / template.heightMm)
+  const labelW = template.widthMm * scale
+  const labelH = template.heightMm * scale
 
-  const slots = Array.from({ length: cols * rows })
-  let labelIdx = 0
-  const allVariants: { product: typeof MARKET_PRODUCTS[0]; variant: typeof MARKET_PRODUCTS[0]['variants'][0] }[] = []
-  for (const p of products) {
-    for (const v of p.variants) {
-      allVariants.push({ product: p, variant: v })
-    }
-  }
-
-  const { t, tx } = useI18n()
+  const slots = cols * rows
+  const { t } = useI18n()
 
   return (
     <div className="overflow-auto max-h-full">
       <svg
         width="100%"
         viewBox={`0 0 ${PAGE_W} ${PAGE_H}`}
-        style={{ border: '1px solid #e2e8f0', background: 'white', maxWidth: 420 }}
+        style={{ border: '1px solid #e2e8f0', background: 'white', maxWidth: 440 }}
       >
         <rect width={PAGE_W} height={PAGE_H} fill="white" />
-        {slots.map((_, i) => {
+        {Array.from({ length: slots }).map((_, i) => {
           const col = i % cols
           const row = Math.floor(i / cols)
-          const x = MARGIN + col * (cellW + GAP_H)
-          const y = MARGIN + row * (cellH + GAP_V)
-          const entry = allVariants[labelIdx]
-          if (entry) labelIdx++
-
+          const x = MARGIN + col * (cellW + GAP_H) + (cellW - labelW) / 2
+          const y = MARGIN + row * (cellH + GAP_V) + (cellH - labelH) / 2
+          const entry = entries[i]
           return (
-            <g key={i} transform={`translate(${x},${y})`}>
-              {entry ? (
-                <LabelSvg product={entry.product} template={{ ...template, widthMm: cellW, heightMm: cellH }} variant={entry.variant} />
-              ) : (
-                <rect width={cellW} height={cellH} rx="1" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="0.3" strokeDasharray="1.5,1.5" />
-              )}
-            </g>
+            <foreignObject
+              key={i}
+              x={x}
+              y={y}
+              width={labelW}
+              height={labelH}
+            >
+              <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: '100%', height: '100%' }}>
+                {entry ? (
+                  <LabelCell entry={entry} template={template} fields={fields} style={style} />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: '1px dashed #e2e8f0',
+                      borderRadius: 4,
+                      background: '#f8fafc',
+                    }}
+                  />
+                )}
+              </div>
+            </foreignObject>
           )
         })}
       </svg>
       <p className="text-[10px] text-muted-foreground text-center mt-2">
-        {t('labels.sheetCaption', { cols: String(cols), rows: String(rows), n: String(cols * rows), sheets: String(Math.ceil(allVariants.length / (cols * rows))) })}
+        {t('labels.sheetCaption', {
+          cols: String(cols),
+          rows: String(rows),
+          n: String(slots),
+          sheets: String(Math.ceil(entries.length / slots) || 1),
+        })}
       </p>
     </div>
   )
 }
 
+const FIELD_META: { key: LabelFieldKey; en: string; bn: string }[] = [
+  { key: 'shopName', en: 'Shop name', bn: 'দোকানের নাম' },
+  { key: 'productName', en: 'Product name', bn: 'পণ্যের নাম' },
+  { key: 'sizeLine', en: 'Size / category', bn: 'সাইজ / ক্যাটাগরি' },
+  { key: 'sku', en: 'SKU (under barcode)', bn: 'SKU' },
+  { key: 'price', en: 'Price', bn: 'মূল্য' },
+  { key: 'barcode', en: 'Barcode (Code 39)', bn: 'বারকোড' },
+  { key: 'qrCode', en: 'QR code (SKU scan)', bn: 'QR কোড' },
+  { key: 'shopCode', en: 'Shop code', bn: 'শপ কোড' },
+]
+
 function LabelsPage() {
+  const { user } = useAuth()
+  const { products, shops } = useAdminStore()
   const { t, lang, tx } = useI18n()
+
+  const shop = shops.find(s => s.id === user?.shopId)
+  const shopName = shop?.name ?? '1to99'
+  const primaryDefault = shop?.theme.primaryColor ?? '#f97316'
+
   const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate>(TEMPLATES[1])
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [fields, setFields] = useState<LabelFieldConfig>(() => loadLabelFields())
+  const [style, setStyle] = useState<LabelStyleConfig>(() => ({
+    ...loadLabelStyle(),
+    primaryColor: loadLabelStyle().primaryColor || primaryDefault,
+  }))
+
+  useEffect(() => { saveLabelFields(fields) }, [fields])
+  useEffect(() => { saveLabelStyle(style) }, [style])
+
+  const myProducts = useMemo(
+    () => products.filter(p => p.shopId === user?.shopId && p.status === 'active'),
+    [products, user?.shopId],
+  )
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase()
-    return MARKET_PRODUCTS.filter(p =>
-      !q || p.name.toLowerCase().includes(q) || p.variants.some(v => v.sku.toLowerCase().includes(q))
+    return myProducts.filter(p =>
+      !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q),
     )
-  }, [query])
+  }, [myProducts, query])
 
-  const selectedProducts = useMemo(() =>
-    MARKET_PRODUCTS.filter(p => selected.has(p.id))
-  , [selected])
+  const selectedEntries = useMemo(() => {
+    const list: LabelEntry[] = []
+    for (const p of myProducts) {
+      if (!selected.has(p.id)) continue
+      const entry = productToLabelEntry(p, shopName)
+      for (let i = 0; i < Math.max(1, style.copiesPerProduct); i++) list.push(entry)
+    }
+    return list
+  }, [myProducts, selected, shopName, style.copiesPerProduct])
+
+  const previewEntries = selectedEntries.slice(0, selectedTemplate.cols * selectedTemplate.rows)
 
   function toggleProduct(id: string) {
     setSelected(prev => {
@@ -183,22 +238,31 @@ function LabelsPage() {
     })
   }
 
+  const setField = useCallback((key: LabelFieldKey, on: boolean) => {
+    setFields(prev => ({ ...prev, [key]: on }))
+  }, [])
+
   function handlePrint() {
-    if (selected.size === 0) { toast.error(t('labels.selectProductFirst')); return }
-    const n = String(selectedProducts.reduce((s, p) => s + p.variants.length, 0))
-    toast.success(t('labels.sendingToPrinter', { n }))
-  }
-  function handleDownload() {
-    if (selected.size === 0) { toast.error(t('labels.selectProductFirst')); return }
-    toast.success(t('labels.pdfStarted'))
+    if (selected.size === 0) {
+      toast.error(t('labels.selectProductFirst'))
+      return
+    }
+    openLabelsPrintWindow(selectedEntries, selectedTemplate, fields, style)
+    toast.success(t('labels.printStarted'))
   }
 
-  const totalLabels = selectedProducts.reduce((s, p) => s + p.variants.length, 0)
+  function handleDownload() {
+    handlePrint()
+    toast.message(tx('Use “Save as PDF” in the print dialog.', 'প্রিন্ট ডায়ালগে “Save as PDF” বেছে নিন।'))
+  }
+
+  const sampleEntry = previewEntries[0] ?? (myProducts[0]
+    ? productToLabelEntry(myProducts[0], shopName)
+    : null)
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-      {/* Left — templates */}
-      <aside className="w-56 border-r bg-muted/20 flex flex-col overflow-y-auto shrink-0">
+      <aside className="w-52 border-r bg-muted/20 flex flex-col overflow-y-auto shrink-0 hidden lg:flex">
         <div className="p-3 border-b">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{t('labels.templates')}</p>
         </div>
@@ -206,25 +270,80 @@ function LabelsPage() {
           {TEMPLATES.map(tpl => (
             <button
               key={tpl.id}
+              type="button"
               onClick={() => setSelectedTemplate(tpl)}
-              className={`w-full rounded-xl p-3 text-left transition-all border-2 ${
+              className={`w-full rounded-xl p-2.5 text-left transition-all border-2 ${
                 selectedTemplate.id === tpl.id
                   ? 'border-primary bg-primary/5'
                   : 'border-transparent hover:border-border hover:bg-background'
               }`}
             >
-              <TemplateSvgPreview tpl={tpl} />
-              <p className="text-xs font-semibold text-foreground mt-2 text-center">{lang === 'bn' ? tpl.namebn : tpl.name}</p>
+              <p className="text-xs font-semibold text-center">{lang === 'bn' ? tpl.namebn : tpl.name}</p>
               <p className="text-[10px] text-muted-foreground text-center">{tpl.size}</p>
-              <p className="text-[10px] text-muted-foreground text-center leading-tight mt-0.5">{lang === 'bn' ? tpl.descriptionbn : tpl.description}</p>
             </button>
           ))}
         </div>
       </aside>
 
-      {/* Middle — product picker */}
-      <div className="w-72 border-r flex flex-col overflow-hidden shrink-0">
-        <div className="p-3 border-b space-y-2">
+      <div className="w-80 border-r flex flex-col overflow-hidden shrink-0">
+        <div className="p-3 border-b bg-slate-50/80 space-y-3 max-h-[45%] overflow-y-auto">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+            <Settings2 className="w-3.5 h-3.5" />
+            {tx('Tag content', 'ট্যাগে যা থাকবে')}
+          </p>
+          <div className="grid grid-cols-1 gap-2">
+            {FIELD_META.map(f => (
+              <label key={f.key} className="flex items-center gap-2 text-xs cursor-pointer">
+                <Checkbox
+                  checked={fields[f.key]}
+                  onCheckedChange={v => setField(f.key, v === true)}
+                />
+                <span>{lang === 'bn' ? f.bn : f.en}</span>
+                {f.key === 'barcode' && <Barcode className="w-3 h-3 text-muted-foreground ml-auto" />}
+                {f.key === 'qrCode' && <QrCode className="w-3 h-3 text-muted-foreground ml-auto" />}
+              </label>
+            ))}
+          </div>
+          <div className="space-y-2 pt-1 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">{tx('Colored header band', 'রঙিন হেডার')}</Label>
+              <Switch
+                checked={style.headerBand}
+                onCheckedChange={v => setStyle(s => ({ ...s, headerBand: v }))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">{tx('Accent', 'রঙ')}</Label>
+              <Input
+                type="color"
+                className="h-8 w-14 p-1 cursor-pointer"
+                value={style.primaryColor}
+                onChange={e => setStyle(s => ({ ...s, primaryColor: e.target.value }))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">{tx('Copies each', 'কপি')}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={99}
+                className="h-8"
+                value={style.copiesPerProduct}
+                onChange={e => setStyle(s => ({ ...s, copiesPerProduct: Math.max(1, Number(e.target.value) || 1) }))}
+              />
+            </div>
+          </div>
+          {sampleEntry && (
+            <div className="rounded-lg border bg-white p-2">
+              <p className="text-[10px] text-muted-foreground mb-1 text-center">{tx('Single tag preview', 'একটি ট্যাগ')}</p>
+              <div className="mx-auto" style={{ maxWidth: 200, aspectRatio: `${selectedTemplate.widthMm}/${selectedTemplate.heightMm}` }}>
+                <LabelCell entry={sampleEntry} template={selectedTemplate} fields={fields} style={style} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-3 border-b space-y-2 flex-1 flex flex-col min-h-0">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{t('labels.products')}</p>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -235,45 +354,58 @@ function LabelsPage() {
               onChange={e => setQuery(e.target.value)}
             />
           </div>
+          <select
+            className="lg:hidden w-full h-8 text-xs border rounded-md px-2 bg-background"
+            value={selectedTemplate.id}
+            onChange={e => setSelectedTemplate(TEMPLATES.find(tpl => tpl.id === e.target.value) ?? TEMPLATES[1])}
+          >
+            {TEMPLATES.map(tpl => (
+              <option key={tpl.id} value={tpl.id}>{lang === 'bn' ? tpl.namebn : tpl.name} ({tpl.size})</option>
+            ))}
+          </select>
           {selected.size > 0 && (
             <p className="text-xs text-primary font-medium">{t('labels.selectedCount', { n: String(selected.size) })}</p>
           )}
-        </div>
-        <div className="flex-1 overflow-y-auto divide-y">
-          {filtered.map(p => {
-            const isSelected = selected.has(p.id)
-            const cat = MARKET_CATEGORIES.find(c => c.id === p.categoryId)
-            return (
-              <div
-                key={p.id}
-                className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
-                onClick={() => toggleProduct(p.id)}
-              >
-                <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(p.id)} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {cat?.icon} {p.variants.length} {t('labels.variants')} · {fmt(getMinPrice(p))}
-                  </p>
+          <div className="flex-1 overflow-y-auto divide-y border rounded-lg min-h-0">
+            {filtered.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-4 text-center">{tx('No active products.', 'কোনো সক্রিয় পণ্য নেই।')}</p>
+            ) : filtered.map(p => {
+              const isSelected = selected.has(p.id)
+              const cat = ALL_CATEGORIES.find(c => c.id === p.categoryId)
+              return (
+                <div
+                  key={p.id}
+                  role="button"
+                  tabIndex={0}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
+                  onClick={() => toggleProduct(p.id)}
+                  onKeyDown={e => e.key === 'Enter' && toggleProduct(p.id)}
+                >
+                  <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(p.id)} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{p.name}</p>
+                    <p className="text-[10px] text-muted-foreground font-mono truncate">
+                      {p.sku} · {cat?.icon} {fmt(effectivePrice(p))}
+                    </p>
+                  </div>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
                 </div>
-                {isSelected && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Right — sheet preview */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
-        <div className="p-3 border-b bg-background flex items-center justify-between gap-2">
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
+        <div className="p-3 border-b bg-background flex items-center justify-between gap-2 flex-wrap">
           <div>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-semibold">
               {lang === 'bn' ? selectedTemplate.namebn : selectedTemplate.name} — {selectedTemplate.size}
             </p>
             <p className="text-xs text-muted-foreground">
-              {selectedProducts.length === 0
+              {selected.size === 0
                 ? t('labels.selectHint')
-                : `${t('labels.labelCount', { n: String(totalLabels) })} · ${t('labels.selectedCount', { n: String(selectedProducts.length) })}`}
+                : `${t('labels.labelCount', { n: String(selectedEntries.length) })} · ${t('labels.selectedCount', { n: String(selected.size) })}`}
             </p>
           </div>
           <div className="flex gap-2">
@@ -287,14 +419,19 @@ function LabelsPage() {
         </div>
 
         <div className="flex-1 overflow-auto p-6 flex items-start justify-center">
-          {selectedProducts.length === 0 ? (
+          {selected.size === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <Package className="w-12 h-12 text-muted-foreground/30 mb-3" />
               <p className="font-medium text-muted-foreground text-sm">{t('labels.noProducts')}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t('labels.noProductsDesc')}</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">{t('labels.noProductsDesc')}</p>
             </div>
           ) : (
-            <SheetPreview products={selectedProducts} template={selectedTemplate} />
+            <SheetPreview
+              entries={previewEntries}
+              template={selectedTemplate}
+              fields={fields}
+              style={style}
+            />
           )}
         </div>
       </div>

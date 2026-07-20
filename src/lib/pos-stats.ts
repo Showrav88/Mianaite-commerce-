@@ -7,7 +7,7 @@ export function filterPosOrders(orders: MarketOrder[], shopId?: string): MarketO
   return orders.filter(o => {
     if (o.source !== 'counter') return false
     if (!shopId) return true
-    return o.shopId === shopId || o.shopId === 'shop_mirpur'
+    return o.shopId === shopId
   })
 }
 

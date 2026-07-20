@@ -5,6 +5,7 @@ import { useOfficeStore, walletBalance, type WalletTransaction, type WalletTxnTy
 import { useAuth } from '@/lib/auth'
 import { useI18n, type Key } from '@/lib/i18n'
 import { fmt } from '@/lib/admin-store'
+import { ConfirmDialog } from '@/components/office/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,6 +39,7 @@ function WalletPage() {
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState<WalletTransaction['method']>('cash')
   const [note, setNote] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   if (user?.role !== 'owner') {
     return (
@@ -47,24 +49,32 @@ function WalletPage() {
     )
   }
 
-  function submit(e: React.FormEvent) {
+  function requestSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const n = Number(amount)
+    if (!n || n <= 0) return
+    if (mode === 'other' && (type === 'buy' || type === 'expense' || type === 'loan' || type === 'salary' || type === 'transfer')) {
+      if (balance < n) {
+        alert(tx('Insufficient balance for this outflow.', 'এই খরচের জন্য ব্যালেন্স নেই।'))
+        return
+      }
+    }
+    setConfirmOpen(true)
+  }
+
+  function executeSubmit() {
     const n = Number(amount)
     if (!n || n <= 0) return
     if (mode === 'deposit') {
       depositWallet(n, method, note || t('wallet.type.deposit'))
     } else {
-      if (type === 'buy' || type === 'expense' || type === 'loan' || type === 'salary' || type === 'transfer') {
-        if (balance < n) {
-          alert(tx('Insufficient balance for this outflow.', 'এই খরচের জন্য ব্যালেন্স নেই।'))
-          return
-        }
-      }
       addWalletTxn({ type, amount: n, method, note: note || t(TYPE_KEYS[type]) })
     }
     setAmount('')
     setNote('')
   }
+
+  const isOutflow = mode === 'other' && type !== 'sell' && type !== 'loan_repay' && type !== 'deposit'
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -73,16 +83,18 @@ function WalletPage() {
           <Wallet className="w-7 h-7 text-orange-500" />
           {t('wallet.title')}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">{t('wallet.subtitle')}</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {tx(
+            'Start with a manual deposit, then pay suppliers and track sales. No demo money.',
+            'ম্যানুয়াল জমা দিয়ে শুরু করুন, তারপর সাপ্লায়ার পরিশোধ ও বিক্রয় ট্র্যাক করুন।',
+          )}
+        </p>
       </div>
 
       <Card className="border-0 shadow-sm bg-gradient-to-br from-orange-50 to-emerald-50">
         <CardContent className="pt-6 pb-5">
           <p className="text-sm text-muted-foreground">{t('wallet.balance')}</p>
           <p className="text-3xl font-bold text-orange-600">{fmt(balance)}</p>
-          <p className="text-xs text-muted-foreground mt-2">
-            {tx('Supplier deals and purchases debit this wallet automatically when paid.', 'সাপ্লায়ার ডিল পরিশোধ হলে ওয়ালেট থেকে স্বয়ংক্রিয় কাটা হয়।')}
-          </p>
         </CardContent>
       </Card>
 
@@ -103,7 +115,7 @@ function WalletPage() {
                 {tx('Other entry', 'অন্যান্য')}
               </Button>
             </div>
-            <form onSubmit={submit} className="space-y-4">
+            <form onSubmit={requestSubmit} className="space-y-4">
               {mode === 'other' && (
                 <div className="space-y-1.5">
                   <Label>{t('wallet.type')}</Label>
@@ -139,7 +151,7 @@ function WalletPage() {
               </div>
               <Button type="submit" className="w-full gap-2">
                 <Plus className="w-4 h-4" />
-                {mode === 'deposit' ? t('wallet.depositSave') : t('wallet.save')}
+                {tx('Review & save', 'দেখুন ও সংরক্ষণ')}
               </Button>
             </form>
             <div className="mt-4 flex gap-3 text-xs text-muted-foreground">
@@ -154,32 +166,61 @@ function WalletPage() {
             <CardTitle className="text-base">{t('wallet.transactions')}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ul className="divide-y max-h-[420px] overflow-y-auto">
-              {wallet.map(wtxn => {
-                const isIn = wtxn.type === 'deposit' || wtxn.type === 'sell' || wtxn.type === 'loan_repay'
-                return (
-                  <li key={wtxn.id} className="px-4 py-3 flex justify-between gap-3 text-sm">
-                    <div>
-                      <p className="font-medium">{t(TYPE_KEYS[wtxn.type])}</p>
-                      <p className="text-xs text-muted-foreground">{wtxn.note} · {wtxn.method} · {wtxn.createdAt}</p>
-                      {wtxn.meta && (wtxn.meta.travelExpense || wtxn.meta.driverBill) ? (
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {wtxn.meta.merchandise != null && `${tx('Mal', 'মাল')}: ${fmt(wtxn.meta.merchandise)} · `}
-                          {wtxn.meta.travelExpense ? `${tx('Travel', 'ভ্রমণ')}: ${fmt(wtxn.meta.travelExpense)} · ` : ''}
-                          {wtxn.meta.driverBill ? `${tx('Driver', 'ড্রাইভার')}: ${fmt(wtxn.meta.driverBill)}` : ''}
-                        </p>
-                      ) : null}
-                    </div>
-                    <span className={`font-bold shrink-0 ${isIn ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {isIn ? '+' : '-'}{fmt(wtxn.amount)}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
+            {wallet.length === 0 ? (
+              <p className="px-4 py-8 text-sm text-muted-foreground text-center">
+                {tx('No transactions yet. Add a deposit to begin.', 'এখনো লেনদেন নেই। জমা দিয়ে শুরু করুন।')}
+              </p>
+            ) : (
+              <ul className="divide-y max-h-[420px] overflow-y-auto">
+                {wallet.map(wtxn => {
+                  const isIn = wtxn.type === 'deposit' || wtxn.type === 'sell' || wtxn.type === 'loan_repay'
+                  return (
+                    <li key={wtxn.id} className="px-4 py-3 flex justify-between gap-3 text-sm">
+                      <div>
+                        <p className="font-medium">{t(TYPE_KEYS[wtxn.type])}</p>
+                        <p className="text-xs text-muted-foreground">{wtxn.note} · {wtxn.method} · {wtxn.createdAt}</p>
+                      </div>
+                      <span className={`font-bold shrink-0 ${isIn ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {isIn ? '+' : '-'}{fmt(wtxn.amount)}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={mode === 'deposit'
+          ? tx('Confirm deposit', 'জমা নিশ্চিত করুন')
+          : tx('Confirm wallet entry', 'লেনদেন নিশ্চিত করুন')}
+        description={tx(
+          'This updates your real wallet balance in this browser. Please check the amount.',
+          'এটি এই ব্রাউজারে ওয়ালেট ব্যালেন্স বদলাবে। পরিমাণ যাচাই করুন।',
+        )}
+        confirmLabel={tx('Yes, save', 'হ্যাঁ, সংরক্ষণ')}
+        cancelLabel={tx('Cancel', 'বাতিল')}
+        variant={isOutflow ? 'destructive' : 'default'}
+        onConfirm={executeSubmit}
+      >
+        <p>
+          <span className="text-muted-foreground">{tx('Amount', 'পরিমাণ')}: </span>
+          <strong>{fmt(Number(amount) || 0)}</strong>
+        </p>
+        <p>
+          <span className="text-muted-foreground">{tx('Type', 'ধরন')}: </span>
+          {mode === 'deposit' ? t('wallet.type.deposit') : t(TYPE_KEYS[type])}
+        </p>
+        {isOutflow && (
+          <p className="text-red-600 text-xs">
+            {tx('Balance after', 'পরবর্তী ব্যালেন্স')}: {fmt(balance - (Number(amount) || 0))}
+          </p>
+        )}
+      </ConfirmDialog>
     </div>
   )
 }
