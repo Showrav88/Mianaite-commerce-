@@ -88,7 +88,7 @@ function LoginPage() {
         </div>
 
         <div className="space-y-2">
-          {DEMO_ACCOUNTS.map(acc => {
+          {DEMO_ACCOUNTS.filter(acc => acc.role !== 'super_admin').map(acc => {
             const meta = ROLE_META[acc.role]
             const Icon = meta.icon
             return (
