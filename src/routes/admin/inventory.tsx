@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Plus, Minus, Search, Package, AlertTriangle } from 'lucide-react'
 import { useAdminStore, ALL_CATEGORIES, fmt, type AdminProduct } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
+import { canEditInventory } from '@/lib/permissions'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ function InventoryPage() {
 
   const shop = shops.find(s => s.id === user?.shopId)
   const primaryColor = shop?.theme.primaryColor ?? '#f97316'
+  const canEdit = user ? canEditInventory(user.role) : false
 
   const myProducts = products
     .filter(p => p.shopId === user?.shopId)
@@ -71,7 +73,10 @@ function InventoryPage() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold">{t('admin.inventory')}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{lang === 'en' ? `${allMy.length} products tracked` : `${allMy.length}টি পণ্য ট্র্যাক করা হচ্ছে`}</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {lang === 'en' ? `${allMy.length} products tracked` : `${allMy.length}টি পণ্য ট্র্যাক করা হচ্ছে`}
+          {!canEdit && (lang === 'en' ? ' · View only' : ' · শুধু দেখা')}
+        </p>
       </div>
 
       {/* Summary */}
@@ -173,6 +178,7 @@ function InventoryPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
+                      {canEdit ? (
                       <div className="flex items-center gap-1">
                         <button onClick={() => adjustStock(p.id, -1)} disabled={p.stock === 0} className="w-7 h-7 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40"><Minus className="w-3 h-3" /></button>
                         <span className="w-10 text-center text-sm font-mono font-medium">{p.stock}</span>
@@ -181,6 +187,9 @@ function InventoryPage() {
                           {t('admin.restock')}
                         </Button>
                       </div>
+                      ) : (
+                        <span className="text-sm font-mono text-muted-foreground">{p.stock}</span>
+                      )}
                     </td>
                   </tr>
                 )

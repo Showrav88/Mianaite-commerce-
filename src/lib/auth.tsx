@@ -1,14 +1,14 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 
-export type UserRole = 'super_admin' | 'shop_admin'
+export type UserRole = 'owner' | 'manager' | 'staff'
 
 export interface AuthUser {
   id: string
   name: string
   email: string
   role: UserRole
-  shopId?: string
-  shopName?: string
+  shopId: 'shop_6'
+  shopName: '1to99'
 }
 
 interface AuthCtx {
@@ -25,7 +25,10 @@ function readStorage(): AuthUser | null {
   try {
     if (typeof window === 'undefined') return null
     const s = localStorage.getItem(STORAGE_KEY)
-    return s ? (JSON.parse(s) as AuthUser) : null
+    if (!s) return null
+    const parsed = JSON.parse(s) as AuthUser
+    if (parsed.shopId !== 'shop_6') return null
+    return parsed
   } catch {
     return null
   }
@@ -34,12 +37,30 @@ function readStorage(): AuthUser | null {
 export const DEMO_PASSWORD = '1234567@'
 
 export const DEMO_ACCOUNTS: AuthUser[] = [
-  { id: 'sa_1', name: 'Super Admin', email: 'superadmin@gmail.com', role: 'super_admin' },
-  { id: 'adm_6', name: '1to99 Market', email: 'admin.1to99@gmail.com', role: 'shop_admin', shopId: 'shop_6', shopName: '1to99 Market' },
-  { id: 'adm_1', name: 'Rahim Tech', email: 'rahim.techhub@gmail.com', role: 'shop_admin', shopId: 'shop_1', shopName: 'TechHub BD' },
-  { id: 'adm_2', name: 'Fatema Fashion', email: 'fatema.fashionista@gmail.com', role: 'shop_admin', shopId: 'shop_2', shopName: 'Fashionista BD' },
-  { id: 'adm_3', name: 'Karim Groceries', email: 'karim.freshmart@gmail.com', role: 'shop_admin', shopId: 'shop_3', shopName: 'FreshMart' },
-  { id: 'adm_5', name: 'Sohag', email: 'sohag.moodon@gmail.com', role: 'shop_admin', shopId: 'shop_5', shopName: 'Mood On' },
+  {
+    id: 'own_1',
+    name: 'Shop Owner',
+    email: 'owner@1to99.com',
+    role: 'owner',
+    shopId: 'shop_6',
+    shopName: '1to99',
+  },
+  {
+    id: 'mgr_1',
+    name: 'Manager',
+    email: 'manager@1to99.com',
+    role: 'manager',
+    shopId: 'shop_6',
+    shopName: '1to99',
+  },
+  {
+    id: 'stf_1',
+    name: 'Counter Staff',
+    email: 'staff@1to99.com',
+    role: 'staff',
+    shopId: 'shop_6',
+    shopName: '1to99',
+  },
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {

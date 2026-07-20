@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { redirectToLogin } from '@/lib/office-only';
 import { useState } from "react";
 import { Minus, Plus, ShoppingCart, Zap, Share2, Star, Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { findProduct, products, discountPercent } from "@/lib/products";
@@ -7,6 +8,7 @@ import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/storefront/ProductCard";
 
 export const Route = createFileRoute("/product/$slug")({
+  beforeLoad: () => redirectToLogin(),
   loader: ({ params }) => {
     const p = findProduct(params.slug);
     if (!p) throw notFound();

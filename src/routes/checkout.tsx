@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { redirectToLogin } from '@/lib/office-only';
 import { useState } from "react";
 import { z } from "zod";
 import { Banknote, Lock } from "lucide-react";
@@ -6,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { useI18n, formatBDT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/checkout")({
+  beforeLoad: () => redirectToLogin(),
   component: CheckoutPage,
   head: () => ({ meta: [{ title: "Checkout — AITeShops" }] }),
 });

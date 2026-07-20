@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { redirectToLogin } from '@/lib/office-only';
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import { SlidersHorizontal } from "lucide-react";
@@ -12,6 +13,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/products")({
+  beforeLoad: () => redirectToLogin(),
   validateSearch: searchSchema,
   component: ProductsPage,
   head: () => ({

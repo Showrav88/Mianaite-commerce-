@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { redirectToLogin } from '@/lib/office-only';
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { useI18n, formatBDT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/cart")({
+  beforeLoad: () => redirectToLogin(),
   component: CartPage,
   head: () => ({ meta: [{ title: "Your Cart — AITeShops" }] }),
 });

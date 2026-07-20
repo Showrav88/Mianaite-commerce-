@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { redirectToLogin } from '@/lib/office-only';
 import { CheckCircle2, Package } from "lucide-react";
 import { z } from "zod";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/order-success")({
+  beforeLoad: () => redirectToLogin(),
   validateSearch: z.object({ id: z.string().optional() }),
   component: SuccessPage,
   head: () => ({ meta: [{ title: "Order Placed — AITeShops" }, { name: "robots", content: "noindex" }] }),

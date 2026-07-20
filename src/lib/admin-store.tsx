@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
-import { DEMO_SHOP } from '@/mock/shops'
 
 export interface ShopTheme {
   primaryColor: string
@@ -254,15 +253,15 @@ const INITIAL_SHOPS: Shop[] = [
     createdAt: '2024-05-01', logo: '',
   },
   {
-    id: 'shop_6', name: DEMO_SHOP.name, slug: DEMO_SHOP.slug,
-    description: '1to99 Market — your neighbourhood bazaar. Electronics, clothing, groceries, accessories & more under one roof.',
-    ownerId: 'adm_6', ownerName: '1to99 Admin', status: 'active',
+    id: 'shop_6', name: '1to99', slug: '1to99',
+    description: '1to99 — neighbourhood retail & counter POS. Inventory, billing, and daily accounts.',
+    ownerId: 'adm_6', ownerName: '1to99 Owner', status: 'active',
     allowedCategories: ['cat_electronics', 'cat_fashion', 'cat_beauty', 'cat_jewelry', 'cat_groceries', 'cat_home', 'cat_kids', 'cat_sports', 'cat_books', 'cat_health'],
     theme: { primaryColor: '#f97316', accentColor: '#10b981', borderRadius: 'medium', fontFamily: 'Inter' },
     stats: { products: 120, orders: 890, revenue: 9500000, customers: 740 },
-    createdAt: DEMO_SHOP.established, logo: '', contactEmail: DEMO_SHOP.email,
-    contactPhone: DEMO_SHOP.phone.replace(/\s/g, ''), address: DEMO_SHOP.address,
-    motto: DEMO_SHOP.tagline,
+    createdAt: '2020-01-01', logo: '', contactEmail: 'owner@1to99.com',
+    contactPhone: '01700001999', address: 'Dhaka, Bangladesh',
+    motto: 'Everything from ৳1 to ৳9999',
   },
   {
     id: 'shop_5', name: 'Mood On', slug: 'mood-on',
