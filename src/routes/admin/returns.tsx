@@ -59,7 +59,7 @@ function ReturnSheet({
   onClose: () => void
 }) {
   const { updateReturnStatus, addDeal } = useMarketStore()
-  const { t, lang } = useI18n()
+  const { t, lang, tx } = useI18n()
   const [step, setStep] = useState<'triage' | 'deals' | 'writeoff' | 'done'>('triage')
   const [discountPct, setDiscountPct] = useState(25)
   const [defectNote, setDefectNote] = useState(ret.inspectionNote ?? '')
@@ -323,7 +323,7 @@ function ReturnSheet({
 
 function ReturnsPage() {
   const { returns } = useMarketStore()
-  const { t } = useI18n()
+  const { t, tx } = useI18n()
   const [activeReturn, setActiveReturn] = useState<MarketReturn | null>(null)
   const [filter, setFilter] = useState<ReturnStatus | 'all'>('all')
 

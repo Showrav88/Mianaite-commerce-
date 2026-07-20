@@ -23,7 +23,7 @@ export function Footer() {
         <div>
           <h4 className="font-semibold mb-3 text-sm">{t("footer.shop")}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/products" className="hover:text-primary">{t("nav.products")}</Link></li>
+            <li><Link to="/products" className="hover:text-primary">{t("nav.allProducts")}</Link></li>
             <li><Link to="/products" search={{ cat: "electronics", q: undefined } as never} className="hover:text-primary">{lang === "en" ? "Electronics" : "ইলেকট্রনিক্স"}</Link></li>
             <li><Link to="/products" search={{ cat: "fashion", q: undefined } as never} className="hover:text-primary">{lang === "en" ? "Fashion" : "ফ্যাশন"}</Link></li>
             <li><Link to="/products" search={{ cat: "groceries", q: undefined } as never} className="hover:text-primary">{lang === "en" ? "Groceries" : "গ্রোসারি"}</Link></li>

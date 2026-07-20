@@ -180,7 +180,7 @@ function YoutubeUrlField({ value, onChange, lang }: { value: string; onChange: (
           value={value}
           onChange={e => onChange(e.target.value)}
           className="pl-9 pr-9"
-          placeholder={lang === 'en' ? 'https://www.youtube.com/watch?v=...' : 'YouTube লিংক...'}
+          placeholder={tx('https://www.youtube.com/watch?v=...', 'YouTube লিংক...')}
         />
         {value && (
           <a href={value} target="_blank" rel="noreferrer" className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -200,7 +200,7 @@ function YoutubeUrlField({ value, onChange, lang }: { value: string; onChange: (
         </div>
       )}
       <p className="text-[11px] text-muted-foreground">
-        {lang === 'en' ? 'Shown on your shop product page. Use a public YouTube link.' : 'শপের পণ্য পেজে দেখাবে। পাবলিক YouTube লিংক দিন।'}
+        {tx('Shown on your shop product page. Use a public YouTube link.', 'শপের পণ্য পেজে দেখাবে। পাবলিক YouTube লিংক দিন।')}
       </p>
     </div>
   )
@@ -217,7 +217,7 @@ function FacebookUrlField({ value, onChange, lang }: { value: string; onChange: 
           value={value}
           onChange={e => onChange(e.target.value)}
           className="pl-9 pr-9"
-          placeholder={lang === 'en' ? 'https://www.facebook.com/.../videos/...' : 'Facebook ভিডিও লিংক...'}
+          placeholder={tx('https://www.facebook.com/.../videos/...', 'Facebook ভিডিও লিংক...')}
         />
         {value && (
           <a href={value} target="_blank" rel="noreferrer" className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -239,11 +239,11 @@ function FacebookUrlField({ value, onChange, lang }: { value: string; onChange: 
       )}
       {value && !isFb && (
         <p className="text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
-          {lang === 'en' ? 'Paste a Facebook video or fb.watch link.' : 'Facebook ভিডিও বা fb.watch লিংক দিন।'}
+          {tx('Paste a Facebook video or fb.watch link.', 'Facebook ভিডিও বা fb.watch লিংক দিন।')}
         </p>
       )}
       <p className="text-[11px] text-muted-foreground">
-        {lang === 'en' ? 'Public Facebook videos only. Customers can switch between YouTube and Facebook on the product page.' : 'পাবলিক Facebook ভিডিও। গ্রাহক পণ্য পেজে YouTube ও Facebook বেছে নিতে পারবেন।'}
+        {tx('Public Facebook videos only. Customers can switch between YouTube and Facebook on the product page.', 'পাবলিক Facebook ভিডিও। গ্রাহক পণ্য পেজে YouTube ও Facebook বেছে নিতে পারবেন।')}
       </p>
     </div>
   )
@@ -274,12 +274,12 @@ function QRModal({
     <Dialog open={!!product} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-sm text-center">
         <DialogHeader>
-          <DialogTitle>{lang === 'en' ? 'Sale QR' : 'বিক্রয় কিউআর'}</DialogTitle>
+          <DialogTitle>{tx('Sale QR', 'বিক্রয় কিউআর')}</DialogTitle>
         </DialogHeader>
         <div className="py-2 space-y-4">
           {!canSell ? (
             <p className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
-              {lang === 'en' ? 'Shop not found.' : 'শপ পাওয়া যায়নি।'}
+              {tx('Shop not found.', 'শপ পাওয়া যায়নি।')}
             </p>
           ) : (
             <>
@@ -306,13 +306,13 @@ function QRModal({
                   }}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  {lang === 'en' ? 'Open for sale' : 'বিক্রয়ের জন্য খুলুন'}
+                  {tx('Open for sale', 'বিক্রয়ের জন্য খুলুন')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => window.open(qrImageUrl!, '_blank')}>
-                  {lang === 'en' ? 'Download QR' : 'কিউআর ডাউনলোড'}
+                  {tx('Download QR', 'কিউআর ডাউনলোড')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => window.print()}>
-                  {lang === 'en' ? 'Print' : 'প্রিন্ট'}
+                  {tx('Print', 'প্রিন্ট')}
                 </Button>
               </div>
             </>
@@ -326,7 +326,7 @@ function QRModal({
 function ProductsPage() {
   const { user } = useAuth()
   const { products, setProducts, shops } = useAdminStore()
-  const { t, lang } = useI18n()
+  const { t, lang, tx } = useI18n()
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('all')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -440,12 +440,12 @@ function ProductsPage() {
   const stockBadge = (p: AdminProduct) => {
     if (p.stock === 0) return <span className="text-xs font-medium text-red-600">{t('admin.outOfStock')}</span>
     if (p.stock <= p.lowStockThreshold) return <span className="text-xs font-medium text-amber-600">{t('admin.lowStock')} ({p.stock})</span>
-    return <span className="text-xs font-medium text-emerald-600">{p.stock} {lang === 'en' ? 'in stock' : 'স্টকে'}</span>
+    return <span className="text-xs font-medium text-emerald-600">{p.stock} {tx('in stock', 'স্টকে')}</span>
   }
 
   const statusBadge = (s: AdminProduct['status']) => {
     const map = { active: 'bg-emerald-100 text-emerald-700', draft: 'bg-slate-100 text-slate-600', inactive: 'bg-red-100 text-red-600' }
-    const label = { active: lang === 'en' ? 'Active' : 'সক্রিয়', draft: lang === 'en' ? 'Draft' : 'ড্রাফট', inactive: lang === 'en' ? 'Inactive' : 'নিষ্ক্রিয়' }
+    const label = { active: tx('Active', 'সক্রিয়'), draft: tx('Draft', 'ড্রাফট'), inactive: tx('Inactive', 'নিষ্ক্রিয়') }
     return <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${map[s]}`}>{label[s]}</span>
   }
 
@@ -473,7 +473,7 @@ function ProductsPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder={lang === 'en' ? 'Search name, SKU, tags...' : 'নাম, SKU, ট্যাগ খুঁজুন...'}
+            placeholder={tx('Search name, SKU, tags...', 'নাম, SKU, ট্যাগ খুঁজুন...')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -488,7 +488,7 @@ function ProductsPage() {
               onChange={e => setScanBuffer(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleScanSubmit(scanBuffer)}
               onBlur={() => setScanMode(false)}
-              placeholder={lang === 'en' ? 'Scan sale QR or SKU...' : 'সেল কিউআর বা SKU...'}
+              placeholder={tx('Scan sale QR or SKU...', 'সেল কিউআর বা SKU...')}
               className="pl-9 border-primary ring-1 ring-primary"
               autoComplete="off"
             />
@@ -499,7 +499,7 @@ function ProductsPage() {
         ) : (
           <Button variant="outline" onClick={activateScan} className="gap-2 shrink-0">
             <ScanLine className="w-4 h-4" />
-            {lang === 'en' ? 'Scan' : 'স্ক্যান'}
+            {tx('Scan', 'স্ক্যান')}
           </Button>
         )}
       </div>
@@ -511,7 +511,7 @@ function ProductsPage() {
           className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${catFilter === 'all' ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'}`}
           style={catFilter === 'all' ? { backgroundColor: primaryColor } : {}}
         >
-          {lang === 'en' ? 'All' : 'সব'}
+          {tx('All', 'সব')}
         </button>
         {allowedCats.map(cat => (
           <button
@@ -520,7 +520,7 @@ function ProductsPage() {
             className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${catFilter === cat.id ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'}`}
             style={catFilter === cat.id ? { backgroundColor: primaryColor } : {}}
           >
-            {cat.icon} {lang === 'en' ? cat.name : cat.nameBn}
+            {cat.icon} {tx(cat.name, cat.nameBn)}
           </button>
         ))}
       </div>
@@ -531,12 +531,12 @@ function ProductsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-slate-50 text-left">
-                <th className="px-5 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Product' : 'পণ্য'}</th>
+                <th className="px-5 py-3 font-medium text-muted-foreground">{tx('Product', 'পণ্য')}</th>
                 <th className="px-5 py-3 font-medium text-muted-foreground">SKU</th>
-                <th className="px-5 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Category' : 'ক্যাটাগরি'}</th>
-                <th className="px-5 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Price / Profit' : 'মূল্য / মুনাফা'}</th>
+                <th className="px-5 py-3 font-medium text-muted-foreground">{tx('Category', 'ক্যাটাগরি')}</th>
+                <th className="px-5 py-3 font-medium text-muted-foreground">{tx('Price / Profit', 'মূল্য / মুনাফা')}</th>
                 <th className="px-5 py-3 font-medium text-muted-foreground">{t('admin.stock')}</th>
-                <th className="px-5 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Status' : 'অবস্থা'}</th>
+                <th className="px-5 py-3 font-medium text-muted-foreground">{tx('Status', 'অবস্থা')}</th>
                 <th className="px-5 py-3 font-medium text-muted-foreground">{t('admin.actions')}</th>
               </tr>
             </thead>
@@ -584,10 +584,10 @@ function ProductsPage() {
                       <div className="space-y-1">
                         {cat && (
                           <span className={`text-xs px-2 py-0.5 rounded-full block w-fit ${hiddenFromStore ? 'bg-amber-50 text-amber-700' : 'bg-violet-50 text-violet-700'}`}>
-                            {cat.icon} {lang === 'en' ? cat.name : cat.nameBn}
+                            {cat.icon} {tx(cat.name, cat.nameBn)}
                             </span>
                         )}
-                        {subcat && <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full block w-fit">{lang === 'en' ? subcat.name : subcat.nameBn}</span>}
+                        {subcat && <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full block w-fit">{tx(subcat.name, subcat.nameBn)}</span>}
                       </div>
                     </td>
                     <td className="px-5 py-4">
@@ -604,7 +604,7 @@ function ProductsPage() {
                         {p.costPrice && (
                           <p className={`text-[11px] mt-0.5 flex items-center gap-0.5 ${pa >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                             <TrendingUp className="w-2.5 h-2.5" />
-                            {pa >= 0 ? '+' : ''}{fmt(pa)} {lang === 'en' ? 'profit' : 'মুনাফা'}
+                            {pa >= 0 ? '+' : ''}{fmt(pa)} {tx('profit', 'মুনাফা')}
                           </p>
                         )}
                       </div>
@@ -613,7 +613,7 @@ function ProductsPage() {
                     <td className="px-5 py-4">{statusBadge(p.status)}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => setQrProduct(p)} className="h-8 w-8 p-0 text-slate-400 hover:text-violet-600" title={lang === 'en' ? 'Sale QR' : 'বিক্রয় কিউআর'}>
+                        <Button size="sm" variant="ghost" onClick={() => setQrProduct(p)} className="h-8 w-8 p-0 text-slate-400 hover:text-violet-600" title={tx('Sale QR', 'বিক্রয় কিউআর')}>
                           <QrCode className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => openEdit(p)} className="h-8 w-8 p-0">
@@ -632,7 +632,7 @@ function ProductsPage() {
           {myProducts.length === 0 && (
             <div className="text-center py-16 text-muted-foreground">
               <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">{lang === 'en' ? 'No products found.' : 'কোনো পণ্য পাওয়া যায়নি।'}</p>
+              <p className="text-sm">{tx('No products found.', 'কোনো পণ্য পাওয়া যায়নি।')}</p>
               <Button onClick={openAdd} className="mt-4 text-white" size="sm" style={{ backgroundColor: primaryColor }}>
                 {t('admin.addProduct')}
               </Button>
@@ -649,9 +649,9 @@ function ProductsPage() {
           </DialogHeader>
           <Tabs defaultValue="basic" className="mt-1">
             <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="basic">{lang === 'en' ? 'Basic Info' : 'মূল তথ্য'}</TabsTrigger>
-              <TabsTrigger value="media">{lang === 'en' ? 'Media' : 'মিডিয়া'}</TabsTrigger>
-              <TabsTrigger value="pricing">{lang === 'en' ? 'Pricing & Stock' : 'মূল্য ও স্টক'}</TabsTrigger>
+              <TabsTrigger value="basic">{tx('Basic Info', 'মূল তথ্য')}</TabsTrigger>
+              <TabsTrigger value="media">{tx('Media', 'মিডিয়া')}</TabsTrigger>
+              <TabsTrigger value="pricing">{tx('Pricing & Stock', 'মূল্য ও স্টক')}</TabsTrigger>
             </TabsList>
 
             {/* Tab: Basic Info */}
@@ -673,58 +673,58 @@ function ProductsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>{lang === 'en' ? 'Category' : 'ক্যাটাগরি'}</Label>
+                  <Label>{tx('Category', 'ক্যাটাগরি')}</Label>
                   <Select
                     value={form.categoryId}
                     onValueChange={v => setForm(f => ({ ...f, categoryId: v, subcategoryId: '' }))}
                   >
-                    <SelectTrigger><SelectValue placeholder={lang === 'en' ? 'Select category' : 'ক্যাটাগরি নির্বাচন'} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={tx('Select category', 'ক্যাটাগরি নির্বাচন')} /></SelectTrigger>
                     <SelectContent>
-                      {allowedCats.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {lang === 'en' ? c.name : c.nameBn}</SelectItem>)}
+                      {allowedCats.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {tx(c.name, c.nameBn)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   {allowedCats.length === 0 && <p className="text-xs text-amber-600">Contact super admin to get category access.</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label>{lang === 'en' ? 'Sub-category' : 'সাব-ক্যাটাগরি'}</Label>
+                  <Label>{tx('Sub-category', 'সাব-ক্যাটাগরি')}</Label>
                   <Select
                     value={form.subcategoryId}
                     onValueChange={v => setForm(f => ({ ...f, subcategoryId: v }))}
                     disabled={!form.categoryId || subcats.length === 0}
                   >
-                    <SelectTrigger><SelectValue placeholder={lang === 'en' ? 'Select type' : 'ধরন নির্বাচন'} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={tx('Select type', 'ধরন নির্বাচন')} /></SelectTrigger>
                     <SelectContent>
-                      {subcats.map(s => <SelectItem key={s.id} value={s.id}>{lang === 'en' ? s.name : s.nameBn}</SelectItem>)}
+                      {subcats.map(s => <SelectItem key={s.id} value={s.id}>{tx(s.name, s.nameBn)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>{lang === 'en' ? 'Description' : 'বিবরণ'}</Label>
+                <Label>{tx('Description', 'বিবরণ')}</Label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-                  placeholder={lang === 'en' ? 'Product description...' : 'পণ্যের বিবরণ...'}
+                  placeholder={tx('Product description...', 'পণ্যের বিবরণ...')}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> {lang === 'en' ? 'Tags (comma separated)' : 'ট্যাগ'}</Label>
+                <Label className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> {tx('Tags (comma separated)', 'ট্যাগ')}</Label>
                 <Input
                   value={form.tags}
                   onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
-                  placeholder={lang === 'en' ? 'new, sale, bestseller' : 'নতুন, সেল, জনপ্রিয়'}
+                  placeholder={tx('new, sale, bestseller', 'নতুন, সেল, জনপ্রিয়')}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>{lang === 'en' ? 'Status' : 'অবস্থা'}</Label>
+                <Label>{tx('Status', 'অবস্থা')}</Label>
                 <Select value={form.status} onValueChange={(v: AdminProduct['status']) => setForm(f => ({ ...f, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">{lang === 'en' ? 'Active' : 'সক্রিয়'}</SelectItem>
-                    <SelectItem value="draft">{lang === 'en' ? 'Draft' : 'ড্রাফট'}</SelectItem>
-                    <SelectItem value="inactive">{lang === 'en' ? 'Inactive' : 'নিষ্ক্রিয়'}</SelectItem>
+                    <SelectItem value="active">{tx('Active', 'সক্রিয়')}</SelectItem>
+                    <SelectItem value="draft">{tx('Draft', 'ড্রাফট')}</SelectItem>
+                    <SelectItem value="inactive">{tx('Inactive', 'নিষ্ক্রিয়')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -733,14 +733,14 @@ function ProductsPage() {
             {/* Tab: Media */}
             <TabsContent value="media" className="space-y-5 pt-3">
               <div className="space-y-2">
-                <Label>{lang === 'en' ? 'Product Images' : 'পণ্যের ছবি'}</Label>
+                <Label>{tx('Product Images', 'পণ্যের ছবি')}</Label>
                 <ImageUploader images={form.images} onChange={imgs => setForm(f => ({ ...f, images: imgs }))} />
               </div>
               <div className="border-t pt-4 space-y-5">
                 <div>
                   <Label className="flex items-center gap-1.5 mb-2">
                     <Video className="w-3.5 h-3.5 text-red-600" />
-                    {lang === 'en' ? 'YouTube video' : 'YouTube ভিডিও'}
+                    {tx('YouTube video', 'YouTube ভিডিও')}
                   </Label>
                   <YoutubeUrlField
                     value={form.youtubeUrl}
@@ -751,7 +751,7 @@ function ProductsPage() {
                 <div>
                   <Label className="flex items-center gap-1.5 mb-2">
                     <Video className="w-3.5 h-3.5 text-[#1877F2]" />
-                    {lang === 'en' ? 'Facebook video' : 'Facebook ভিডিও'}
+                    {tx('Facebook video', 'Facebook ভিডিও')}
                   </Label>
                   <FacebookUrlField
                     value={form.facebookVideoUrl}
@@ -769,7 +769,7 @@ function ProductsPage() {
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                    {lang === 'en' ? 'Cost Price (৳)' : 'ক্রয় মূল্য (৳)'}
+                    {tx('Cost Price (৳)', 'ক্রয় মূল্য (৳)')}
                   </Label>
                   <Input
                     type="number"
@@ -777,12 +777,12 @@ function ProductsPage() {
                     onChange={e => setForm(f => ({ ...f, costPrice: e.target.value }))}
                     placeholder="0"
                   />
-                  <p className="text-[11px] text-muted-foreground">{lang === 'en' ? 'What you paid (private)' : 'আপনার ক্রয় মূল্য (প্রাইভেট)'}</p>
+                  <p className="text-[11px] text-muted-foreground">{tx('What you paid (private)', 'আপনার ক্রয় মূল্য (প্রাইভেট)')}</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                    {lang === 'en' ? 'Sell Price (৳)' : 'বিক্রয় মূল্য (৳)'}
+                    {tx('Sell Price (৳)', 'বিক্রয় মূল্য (৳)')}
                   </Label>
                   <Input
                     type="number"
@@ -790,7 +790,7 @@ function ProductsPage() {
                     onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
                     placeholder="0"
                   />
-                  <p className="text-[11px] text-muted-foreground">{lang === 'en' ? 'Original selling price' : 'মূল বিক্রয় মূল্য'}</p>
+                  <p className="text-[11px] text-muted-foreground">{tx('Original selling price', 'মূল বিক্রয় মূল্য')}</p>
                 </div>
               </div>
 
@@ -798,7 +798,7 @@ function ProductsPage() {
               <div className="space-y-3 bg-orange-50/60 border border-orange-100 rounded-xl p-4">
                 <Label className="flex items-center gap-1.5 text-orange-700">
                   <Percent className="w-3.5 h-3.5" />
-                  {lang === 'en' ? 'Discount / Offer' : 'ছাড় / অফার'}
+                  {tx('Discount / Offer', 'ছাড় / অফার')}
                 </Label>
                 <div className="flex gap-2">
                   {(['none', 'percent', 'amount'] as DiscountType[]).map(type => (
@@ -809,10 +809,10 @@ function ProductsPage() {
                       className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-all ${form.discountType === type ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}
                     >
                       {type === 'none'
-                        ? (lang === 'en' ? 'No Discount' : 'ছাড় নেই')
+                        ? (tx('No Discount', 'ছাড় নেই'))
                         : type === 'percent'
-                        ? (lang === 'en' ? '% Off' : '% ছাড়')
-                        : (lang === 'en' ? '৳ Off' : '৳ ছাড়')}
+                        ? (tx('% Off', '% ছাড়'))
+                        : (tx('৳ Off', '৳ ছাড়'))}
                     </button>
                   ))}
                 </div>
@@ -827,7 +827,7 @@ function ProductsPage() {
                     />
                     <span className="text-sm text-muted-foreground">
                       {form.discountType === 'percent' ? '%' : '৳'}
-                      {lang === 'en' ? ' discount' : ' ছাড়'}
+                      {tx(' discount', ' ছাড়')}
                     </span>
                   </div>
                 )}
@@ -838,19 +838,19 @@ function ProductsPage() {
                 <div className="rounded-xl border bg-slate-50 p-4 space-y-2 text-sm">
                   <p className="font-semibold text-slate-700 flex items-center gap-1.5">
                     <TrendingUp className="w-4 h-4" />
-                    {lang === 'en' ? 'Profit Summary' : 'মুনাফা হিসাব'}
+                    {tx('Profit Summary', 'মুনাফা হিসাব')}
                   </p>
                   <div className="space-y-1.5 text-xs">
                     {sellPrice > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">{lang === 'en' ? 'Sell Price' : 'বিক্রয় মূল্য'}</span>
+                        <span className="text-muted-foreground">{tx('Sell Price', 'বিক্রয় মূল্য')}</span>
                         <span className="font-medium">{fmt(sellPrice)}</span>
                       </div>
                     )}
                     {form.discountType !== 'none' && form.discountValue && (
                       <div className="flex justify-between text-red-500">
                         <span>
-                          {lang === 'en' ? 'Discount' : 'ছাড়'}
+                          {tx('Discount', 'ছাড়')}
                           {form.discountType === 'percent' ? ` (${form.discountValue}%)` : ''}
                         </span>
                         <span>−{fmt(sellPrice - effPrice)}</span>
@@ -858,18 +858,18 @@ function ProductsPage() {
                     )}
                     {effPrice !== sellPrice && sellPrice > 0 && (
                       <div className="flex justify-between border-t pt-1.5">
-                        <span className="font-medium text-emerald-700">{lang === 'en' ? 'Customer Pays' : 'গ্রাহক দেবে'}</span>
+                        <span className="font-medium text-emerald-700">{tx('Customer Pays', 'গ্রাহক দেবে')}</span>
                         <span className="font-bold text-emerald-700">{fmt(effPrice)}</span>
                       </div>
                     )}
                     {costPrice > 0 && (
                       <>
                         <div className="flex justify-between text-muted-foreground">
-                          <span>{lang === 'en' ? 'Cost Price' : 'ক্রয় মূল্য'}</span>
+                          <span>{tx('Cost Price', 'ক্রয় মূল্য')}</span>
                           <span>−{fmt(costPrice)}</span>
                         </div>
                         <div className={`flex justify-between border-t pt-1.5 font-bold ${profit! >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                          <span>{lang === 'en' ? 'Profit' : 'মুনাফা'}</span>
+                          <span>{tx('Profit', 'মুনাফা')}</span>
                           <span>
                             {profit! >= 0 ? '+' : ''}{fmt(profit!)}
                             {marginPct !== null && ` (${marginPct}%)`}
@@ -888,7 +888,7 @@ function ProductsPage() {
                   <Input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>{lang === 'en' ? 'Min Stock Alert' : 'সর্বনিম্ন স্টক'}</Label>
+                  <Label>{tx('Min Stock Alert', 'সর্বনিম্ন স্টক')}</Label>
                   <Input type="number" value={form.lowStockThreshold} onChange={e => setForm(f => ({ ...f, lowStockThreshold: e.target.value }))} />
                 </div>
               </div>
@@ -908,8 +908,8 @@ function ProductsPage() {
       {/* Delete confirm */}
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>{lang === 'en' ? 'Delete Product?' : 'পণ্য মুছবেন?'}</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">{lang === 'en' ? 'This action cannot be undone.' : 'এই পদক্ষেপটি পূর্বাবস্থায় ফেরানো যাবে না।'}</p>
+          <DialogHeader><DialogTitle>{tx('Delete Product?', 'পণ্য মুছবেন?')}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{tx('This action cannot be undone.', 'এই পদক্ষেপটি পূর্বাবস্থায় ফেরানো যাবে না।')}</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteId(null)}>{t('admin.cancel')}</Button>
             <Button variant="destructive" onClick={() => deleteId && deleteProduct(deleteId)}>{t('admin.delete')}</Button>

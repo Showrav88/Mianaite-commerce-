@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useRef, useEffect } from 'react'
 import { Plus, Minus, Trash2, Receipt, Search, CheckCircle, Printer } from 'lucide-react'
 import { useAdminStore, fmt, effectivePrice, type AdminProduct } from '@/lib/admin-store'
+import { ProductThumb } from '@/components/office/ProductThumb'
 import { useCustomerStore } from '@/lib/customer-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
@@ -37,7 +38,7 @@ function SellPage() {
   const { user } = useAuth()
   const { products, shops, setProducts } = useAdminStore()
   const { registerCustomer, placeCustomerOrder } = useCustomerStore()
-  const { lang } = useI18n()
+  const { lang, tx } = useI18n()
 
   const shop = shops.find(s => s.id === user?.shopId)
   const primaryColor = shop?.theme.primaryColor ?? '#1a1a2e'
@@ -103,7 +104,7 @@ function SellPage() {
       shopId: shop.id,
       items: cart.map(i => ({ productId: i.productId, name: i.name, qty: i.qty, price: i.price })),
       total,
-      address: lang === 'en' ? 'Showroom / Counter' : 'শোরুম / কাউন্টার',
+      address: tx('Showroom / Counter', 'শোরুম / কাউন্টার'),
     })
 
     setProducts(
@@ -137,7 +138,7 @@ function SellPage() {
   }
 
   if (!shop) {
-    return <div className="p-6 text-muted-foreground">{lang === 'en' ? 'Shop not found.' : 'শপ পাওয়া যায়নি।'}</div>
+    return <div className="p-6 text-muted-foreground">{tx('Shop not found.', 'শপ পাওয়া যায়নি।')}</div>
   }
 
   return (
@@ -145,7 +146,7 @@ function SellPage() {
       {/* Left — product picker */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 border-r">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold">{lang === 'en' ? 'Counter Sale' : 'কাউন্টার বিক্রি'}</h1>
+          <h1 className="text-xl font-bold">{tx('Counter Sale', 'কাউন্টার বিক্রি')}</h1>
           <span className="text-xs text-muted-foreground">{lang === 'en' ? `${myProducts.length} products` : `${myProducts.length}টি পণ্য`}</span>
         </div>
 
@@ -155,7 +156,7 @@ function SellPage() {
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={lang === 'en' ? 'Search by name or SKU…' : 'নাম বা SKU দিয়ে খুঁজুন…'}
+            placeholder={tx('Search by name or SKU…', 'নাম বা SKU দিয়ে খুঁজুন…')}
             className="pl-9"
           />
         </div>
@@ -174,7 +175,9 @@ function SellPage() {
                 className="relative flex flex-col rounded-xl border bg-white overflow-hidden text-left transition-all hover:shadow-md active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={inCart ? { borderColor: primaryColor, boxShadow: `0 0 0 2px ${primaryColor}30` } : {}}
               >
-                <img src={p.images?.[0] ?? p.image} alt={p.name} className="w-full aspect-square object-cover" />
+                <div className="w-full aspect-square flex items-center justify-center bg-slate-50 border-b">
+                  <ProductThumb src={p.images?.[0] ?? p.image} alt={p.name} size="lg" />
+                </div>
                 <div className="p-2 space-y-0.5">
                   <p className="text-xs font-semibold leading-tight line-clamp-2">{p.name}</p>
                   <p className="text-xs font-bold" style={{ color: primaryColor }}>{fmt(ep)}</p>
@@ -190,7 +193,7 @@ function SellPage() {
           })}
           {filtered.length === 0 && (
             <p className="col-span-full text-sm text-muted-foreground text-center py-8">
-              {lang === 'en' ? 'No products found.' : 'কোনো পণ্য পাওয়া যায়নি।'}
+              {tx('No products found.', 'কোনো পণ্য পাওয়া যায়নি।')}
             </p>
           )}
         </div>
@@ -202,20 +205,20 @@ function SellPage() {
         <div className="p-4 bg-white border-b space-y-3">
           <p className="text-sm font-semibold flex items-center gap-2">
             <Receipt className="w-4 h-4" style={{ color: primaryColor }} />
-            {lang === 'en' ? 'Customer Info' : 'গ্রাহকের তথ্য'}
+            {tx('Customer Info', 'গ্রাহকের তথ্য')}
           </p>
           <div className="space-y-2">
             <div>
-              <Label className="text-xs">{lang === 'en' ? 'Name *' : 'নাম *'}</Label>
+              <Label className="text-xs">{tx('Name *', 'নাম *')}</Label>
               <Input
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
-                placeholder={lang === 'en' ? 'Customer name' : 'গ্রাহকের নাম'}
+                placeholder={tx('Customer name', 'গ্রাহকের নাম')}
                 className="mt-1 h-9"
               />
             </div>
             <div>
-              <Label className="text-xs">{lang === 'en' ? 'Phone *' : 'ফোন *'}</Label>
+              <Label className="text-xs">{tx('Phone *', 'ফোন *')}</Label>
               <Input
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
@@ -231,12 +234,12 @@ function SellPage() {
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {cart.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              {lang === 'en' ? 'Tap a product to add it.' : 'পণ্য যোগ করতে ক্লিক করুন।'}
+              {tx('Tap a product to add it.', 'পণ্য যোগ করতে ক্লিক করুন।')}
             </p>
           ) : (
             cart.map(item => (
               <div key={item.productId} className="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm">
-                <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                <ProductThumb src={item.image} alt={item.name} size="lg" className="shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate">{item.name}</p>
                   <p className="text-xs font-bold mt-0.5" style={{ color: primaryColor }}>{fmt(item.price)}</p>
@@ -261,7 +264,7 @@ function SellPage() {
         {/* Total + complete */}
         <div className="p-4 bg-white border-t space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold">{lang === 'en' ? 'Total' : 'মোট'}</span>
+            <span className="font-semibold">{tx('Total', 'মোট')}</span>
             <span className="text-xl font-bold" style={{ color: primaryColor }}>{fmt(total)}</span>
           </div>
           <Button
@@ -271,13 +274,13 @@ function SellPage() {
             onClick={completeSale}
           >
             {completing
-              ? (lang === 'en' ? 'Processing…' : 'প্রক্রিয়া হচ্ছে…')
-              : (lang === 'en' ? 'Complete Sale & Print Invoice' : 'বিক্রি সম্পন্ন ও ইনভয়েস')
+              ? (tx('Processing…', 'প্রক্রিয়া হচ্ছে…'))
+              : (tx('Complete Sale & Print Invoice', 'বিক্রি সম্পন্ন ও ইনভয়েস'))
             }
           </Button>
           {!canComplete && cart.length > 0 && (
             <p className="text-xs text-amber-600 text-center">
-              {lang === 'en' ? 'Enter customer name and phone to continue.' : 'চালিয়ে যেতে গ্রাহকের নাম ও ফোন দিন।'}
+              {tx('Enter customer name and phone to continue.', 'চালিয়ে যেতে গ্রাহকের নাম ও ফোন দিন।')}
             </p>
           )}
         </div>
@@ -290,7 +293,7 @@ function SellPage() {
             {/* Header */}
             <div className="px-6 py-5 text-center text-white" style={{ backgroundColor: primaryColor }}>
               <CheckCircle className="w-10 h-10 mx-auto mb-2" style={{ color: accentColor }} />
-              <p className="font-bold text-lg">{lang === 'en' ? 'Sale Complete!' : 'বিক্রি সম্পন্ন!'}</p>
+              <p className="font-bold text-lg">{tx('Sale Complete!', 'বিক্রি সম্পন্ন!')}</p>
               <p className="text-xs opacity-70 mt-0.5">{invoice.shopName}</p>
             </div>
 
@@ -302,16 +305,16 @@ function SellPage() {
               </div>
 
               <div className="border rounded-lg p-3 space-y-0.5 bg-slate-50 text-sm">
-                <p><span className="text-muted-foreground">{lang === 'en' ? 'Name:' : 'নাম:'}</span> <span className="font-semibold">{invoice.customerName}</span></p>
-                <p><span className="text-muted-foreground">{lang === 'en' ? 'Phone:' : 'ফোন:'}</span> <span className="font-semibold">{invoice.customerPhone}</span></p>
+                <p><span className="text-muted-foreground">{tx('Name:', 'নাম:')}</span> <span className="font-semibold">{invoice.customerName}</span></p>
+                <p><span className="text-muted-foreground">{tx('Phone:', 'ফোন:')}</span> <span className="font-semibold">{invoice.customerPhone}</span></p>
               </div>
 
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b text-muted-foreground">
-                    <th className="text-left pb-1">{lang === 'en' ? 'Item' : 'পণ্য'}</th>
-                    <th className="text-center pb-1">{lang === 'en' ? 'Qty' : 'পরিমাণ'}</th>
-                    <th className="text-right pb-1">{lang === 'en' ? 'Amount' : 'পরিমাণ'}</th>
+                    <th className="text-left pb-1">{tx('Item', 'পণ্য')}</th>
+                    <th className="text-center pb-1">{tx('Qty', 'পরিমাণ')}</th>
+                    <th className="text-right pb-1">{tx('Amount', 'পরিমাণ')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -326,7 +329,7 @@ function SellPage() {
               </table>
 
               <div className="flex justify-between items-center font-bold text-base pt-1">
-                <span>{lang === 'en' ? 'Total' : 'মোট'}</span>
+                <span>{tx('Total', 'মোট')}</span>
                 <span style={{ color: primaryColor }}>{fmt(invoice.total)}</span>
               </div>
             </div>
@@ -339,14 +342,14 @@ function SellPage() {
                 onClick={() => window.print()}
               >
                 <Printer className="w-4 h-4" />
-                {lang === 'en' ? 'Print' : 'প্রিন্ট'}
+                {tx('Print', 'প্রিন্ট')}
               </Button>
               <Button
                 className="flex-1 text-white"
                 style={{ backgroundColor: primaryColor }}
                 onClick={newSale}
               >
-                {lang === 'en' ? 'New Sale' : 'নতুন বিক্রি'}
+                {tx('New Sale', 'নতুন বিক্রি')}
               </Button>
             </div>
           </div>

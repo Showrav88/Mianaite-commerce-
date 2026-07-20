@@ -2,11 +2,11 @@ import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from '@tan
 import { useEffect, useState, type ElementType } from 'react'
 import {
   LayoutDashboard, Package, BarChart2, Settings, LogOut, Menu, Globe, ChevronRight,
-  ScanLine, Printer, Layers, Wallet, Users, FileBarChart,
+  ScanLine, Printer, Layers, Wallet, Users, FileBarChart, Truck,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useAdminStore } from '@/lib/admin-store'
-import { useI18n } from '@/lib/i18n'
+import { useI18n, type Key } from '@/lib/i18n'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -20,28 +20,24 @@ export const Route = createFileRoute('/admin')({
   component: AdminLayout,
 })
 
-const ICONS: Record<string, ElementType> = {
+const ITEM_ICON: Record<string, ElementType> = {
   '/admin/catalog/products': Package,
   '/admin/catalog/categories': Layers,
   '/admin/inventory': BarChart2,
   '/admin/sell': ScanLine,
   '/admin/labels': Printer,
   '/admin/reports': FileBarChart,
+  '/admin/suppliers': Truck,
   '/admin/wallet': Wallet,
   '/admin/staff': Users,
   '/admin/settings': Settings,
 }
 
-const LABELS: Record<string, { en: string; bn: string }> = {
-  'nav.products': { en: 'Products', bn: 'পণ্য' },
-  'nav.categories': { en: 'Categories', bn: 'ক্যাটাগরি' },
-  'nav.inventory': { en: 'Inventory & stock', bn: 'ইনভেন্টরি ও স্টক' },
-  'nav.inventoryCheck': { en: 'Stock check', bn: 'স্টক যাচাই' },
-  'nav.counterPos': { en: 'Counter POS', bn: 'কাউন্টার POS' },
-  'nav.labels': { en: 'Barcode / labels', bn: 'বারকোড / লেবেল' },
-  'nav.reports': { en: 'P&L reports', bn: 'লাভ-ক্ষতি রিপোর্ট' },
-  'nav.wallet': { en: 'Wallet & accounts', bn: 'ওয়ালেট ও হিসাব' },
-  'nav.staff': { en: 'Staff & salary', bn: 'স্টাফ ও বেতন' },
+const SECTION_KEYS: Record<string, Key> = {
+  Catalog: 'nav.sectionCatalog',
+  Operations: 'nav.sectionOperations',
+  'Finance & HR': 'nav.sectionFinance',
+  Staff: 'nav.sectionStaffNav',
 }
 
 function NavLink({
@@ -117,31 +113,30 @@ function AdminLayout() {
 
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {user.role !== 'staff' && (
-            <NavLink
-              item={{ to: '/admin', icon: LayoutDashboard }}
-              active={pathname === '/admin'}
-              primaryColor={primaryColor}
-              onClose={() => setOpen(false)}
-              label={lang === 'bn' ? 'ড্যাশবোর্ড' : 'Dashboard'}
-            />
+              <NavLink
+                item={{ to: '/admin', icon: LayoutDashboard }}
+                active={pathname === '/admin'}
+                primaryColor={primaryColor}
+                onClose={() => setOpen(false)}
+                label={t('nav.dashboard')}
+              />
           )}
 
           {sections.map(section => (
             <div key={section.title}>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 pt-4 pb-1">
-                {lang === 'bn' ? section.titleBn : section.title}
+                {t(SECTION_KEYS[section.title] ?? 'nav.sectionOperations')}
               </p>
               {section.items.map(item => {
                 const active = pathname === item.to || pathname.startsWith(item.to + '/')
-                const labels = LABELS[item.labelKey] ?? { en: item.labelKey, bn: item.labelKey }
                 return (
                   <NavLink
                     key={item.to}
-                    item={{ to: item.to, icon: ICONS[item.to] ?? Package }}
+                    item={{ to: item.to, icon: ITEM_ICON[item.to] ?? Package }}
                     active={active}
                     primaryColor={primaryColor}
                     onClose={() => setOpen(false)}
-                    label={lang === 'bn' ? labels.bn : labels.en}
+                    label={t(item.labelKey as Key)}
                   />
                 )
               })}
@@ -155,7 +150,7 @@ function AdminLayout() {
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-600 hover:text-white hover:bg-emerald-600 transition-all mt-2"
             >
               <ScanLine className="w-4 h-4 shrink-0" />
-              {lang === 'bn' ? 'ফুল স্ক্রিন POS' : 'Full-screen POS'}
+              {t('nav.fullPos')}
             </Link>
           )}
 
@@ -167,7 +162,7 @@ function AdminLayout() {
                 active={pathname.startsWith('/admin/settings')}
                 primaryColor={primaryColor}
                 onClose={() => setOpen(false)}
-                label={lang === 'bn' ? 'সেটিংস' : 'Settings'}
+                label={t('common.settings')}
               />
             </>
           )}
@@ -179,7 +174,7 @@ function AdminLayout() {
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all text-sm"
           >
             <Globe className="w-4 h-4" />
-            <span>{lang === 'en' ? 'বাংলায় দেখুন' : 'English'}</span>
+            <span>{lang === 'en' ? t('common.viewInBangla') : t('common.viewInEnglish')}</span>
           </button>
         </div>
 

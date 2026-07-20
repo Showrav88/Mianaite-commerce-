@@ -31,6 +31,7 @@ import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as CounterShiftsRouteImport } from './routes/counter/shifts'
 import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
+import { Route as AdminSuppliersRouteImport } from './routes/admin/suppliers'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSellRouteImport } from './routes/admin/sell'
@@ -161,6 +162,11 @@ const AdminWalletRoute = AdminWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSuppliersRoute = AdminSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminStaffRoute = AdminStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
+  '/admin/suppliers': typeof AdminSuppliersRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/counter/shifts': typeof CounterShiftsRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
+  '/admin/suppliers': typeof AdminSuppliersRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/counter/shifts': typeof CounterShiftsRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/admin/sell': typeof AdminSellRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
+  '/admin/suppliers': typeof AdminSuppliersRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/counter/shifts': typeof CounterShiftsRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/admin/sell'
     | '/admin/settings'
     | '/admin/staff'
+    | '/admin/suppliers'
     | '/admin/wallet'
     | '/counter/shifts'
     | '/product/$slug'
@@ -447,6 +457,7 @@ export interface FileRouteTypes {
     | '/admin/sell'
     | '/admin/settings'
     | '/admin/staff'
+    | '/admin/suppliers'
     | '/admin/wallet'
     | '/counter/shifts'
     | '/product/$slug'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/admin/sell'
     | '/admin/settings'
     | '/admin/staff'
+    | '/admin/suppliers'
     | '/admin/wallet'
     | '/counter/shifts'
     | '/product/$slug'
@@ -683,6 +695,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWalletRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/suppliers': {
+      id: '/admin/suppliers'
+      path: '/suppliers'
+      fullPath: '/admin/suppliers'
+      preLoaderRoute: typeof AdminSuppliersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/staff': {
       id: '/admin/staff'
       path: '/staff'
@@ -830,6 +849,7 @@ interface AdminRouteChildren {
   AdminSellRoute: typeof AdminSellRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStaffRoute: typeof AdminStaffRoute
+  AdminSuppliersRoute: typeof AdminSuppliersRoute
   AdminWalletRoute: typeof AdminWalletRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCatalogCategoriesRoute: typeof AdminCatalogCategoriesRoute
@@ -848,6 +868,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSellRoute: AdminSellRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStaffRoute: AdminStaffRoute,
+  AdminSuppliersRoute: AdminSuppliersRoute,
   AdminWalletRoute: AdminWalletRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCatalogCategoriesRoute: AdminCatalogCategoriesRoute,

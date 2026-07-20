@@ -122,7 +122,7 @@ function SheetPreview({
     }
   }
 
-  const { t } = useI18n()
+  const { t, tx } = useI18n()
 
   return (
     <div className="overflow-auto max-h-full">
@@ -159,7 +159,7 @@ function SheetPreview({
 }
 
 function LabelsPage() {
-  const { t, lang } = useI18n()
+  const { t, lang, tx } = useI18n()
   const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate>(TEMPLATES[1])
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -184,14 +184,13 @@ function LabelsPage() {
   }
 
   function handlePrint() {
-    if (selected.size === 0) { toast.error(lang === 'bn' ? 'প্রথমে একটি পণ্য বাছাই করুন' : 'Select at least one product first'); return }
-    toast.success(lang === 'bn'
-      ? `${selectedProducts.reduce((s, p) => s + p.variants.length, 0)}টি লেবেল প্রিন্টারে পাঠানো হচ্ছে…`
-      : `Sending ${selectedProducts.reduce((s, p) => s + p.variants.length, 0)} labels to printer…`)
+    if (selected.size === 0) { toast.error(t('labels.selectProductFirst')); return }
+    const n = String(selectedProducts.reduce((s, p) => s + p.variants.length, 0))
+    toast.success(t('labels.sendingToPrinter', { n }))
   }
   function handleDownload() {
-    if (selected.size === 0) { toast.error(lang === 'bn' ? 'প্রথমে একটি পণ্য বাছাই করুন' : 'Select at least one product first'); return }
-    toast.success(lang === 'bn' ? 'পিডিএফ ডাউনলোড শুরু হয়েছে (ডেমো)' : 'PDF download started (demo)')
+    if (selected.size === 0) { toast.error(t('labels.selectProductFirst')); return }
+    toast.success(t('labels.pdfStarted'))
   }
 
   const totalLabels = selectedProducts.reduce((s, p) => s + p.variants.length, 0)
@@ -230,7 +229,7 @@ function LabelsPage() {
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
-              placeholder={lang === 'bn' ? 'খুঁজুন…' : 'Search…'}
+              placeholder={t('labels.searchPlaceholder')}
               className="pl-8 h-8 text-sm"
               value={query}
               onChange={e => setQuery(e.target.value)}

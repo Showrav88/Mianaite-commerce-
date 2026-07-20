@@ -50,7 +50,7 @@ function LogoUploader({ logo, onChange, lang }: { logo: string; onChange: (url: 
 
   return (
     <div className="space-y-2">
-      <Label>{lang === 'en' ? 'Shop Logo' : 'শপ লোগো'}</Label>
+      <Label>{tx('Shop Logo', 'শপ লোগো')}</Label>
       <div className="flex items-center gap-3">
         {logo ? (
           <img src={logo} alt="Logo" className="h-14 w-14 object-cover rounded-xl border shadow shrink-0" />
@@ -67,7 +67,7 @@ function LogoUploader({ logo, onChange, lang }: { logo: string; onChange: (url: 
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline disabled:opacity-50"
           >
             {cloudinaryConfigured ? <Cloud className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
-            {uploading ? (lang === 'en' ? 'Uploading…' : 'আপলোড হচ্ছে…') : (lang === 'en' ? 'Upload logo' : 'লোগো আপলোড')}
+            {uploading ? (tx('Uploading…', 'আপলোড হচ্ছে…')) : (tx('Upload logo', 'লোগো আপলোড'))}
           </button>
           <Input
             value={logo}
@@ -92,7 +92,7 @@ function LogoUploader({ logo, onChange, lang }: { logo: string; onChange: (url: 
 function SettingsPage() {
   const { user } = useAuth()
   const { shops, setShops } = useAdminStore()
-  const { t, lang, setLang } = useI18n()
+  const { t, lang, setLang, tx } = useI18n()
   const [saved, setSaved] = useState(false)
 
   const shop = shops.find(s => s.id === user?.shopId)
@@ -124,7 +124,7 @@ function SettingsPage() {
   const RADIUS_OPTIONS: ShopTheme['borderRadius'][] = ['sharp', 'medium', 'rounded']
   const FONT_OPTIONS: ShopTheme['fontFamily'][] = ['Inter', 'Poppins', 'Roboto']
 
-  if (!shop) return <div className="p-6 text-muted-foreground">{lang === 'en' ? 'Shop not found.' : 'শপ পাওয়া যায়নি।'}</div>
+  if (!shop) return <div className="p-6 text-muted-foreground">{tx('Shop not found.', 'শপ পাওয়া যায়নি।')}</div>
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -134,7 +134,7 @@ function SettingsPage() {
           <p className="text-muted-foreground text-sm mt-1">{shop.name}</p>
         </div>
         <Button onClick={saveAll} className="gap-2 text-white" style={{ backgroundColor: primaryColor }}>
-          {saved ? <><Check className="w-4 h-4" /> {lang === 'en' ? 'Saved!' : 'সংরক্ষিত!'}</> : t('admin.save')}
+          {saved ? <><Check className="w-4 h-4" /> {tx('Saved!', 'সংরক্ষিত!')}</> : t('admin.save')}
         </Button>
       </div>
 
@@ -143,8 +143,8 @@ function SettingsPage() {
           <TabsTrigger value="profile">{t('admin.profile')}</TabsTrigger>
           <TabsTrigger value="theme">{t('admin.theme')}</TabsTrigger>
           <TabsTrigger value="contact">{t('admin.contact')}</TabsTrigger>
-          <TabsTrigger value="cover">{lang === 'en' ? 'Cover Photo' : 'কভার ফটো'}</TabsTrigger>
-          <TabsTrigger value="language">{lang === 'en' ? 'Language' : 'ভাষা'}</TabsTrigger>
+          <TabsTrigger value="cover">{tx('Cover Photo', 'কভার ফটো')}</TabsTrigger>
+          <TabsTrigger value="language">{tx('Language', 'ভাষা')}</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -159,13 +159,13 @@ function SettingsPage() {
                 <Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label>{lang === 'en' ? 'Description' : 'বিবরণ'}</Label>
+                <Label>{tx('Description', 'বিবরণ')}</Label>
                 <Input value={profile.description} onChange={e => setProfile(p => ({ ...p, description: e.target.value }))} />
               </div>
               <LogoUploader logo={profile.logo} onChange={logo => setProfile(p => ({ ...p, logo }))} lang={lang} />
               <div className="space-y-1.5">
-                <Label>{lang === 'en' ? 'Motto / Tagline' : 'মোটো / ট্যাগলাইন'}</Label>
-                <Input value={profile.motto} onChange={e => setProfile(p => ({ ...p, motto: e.target.value }))} placeholder={lang === 'en' ? 'Your brand tagline...' : 'আপনার ব্র্যান্ডের ট্যাগলাইন...'} />
+                <Label>{tx('Motto / Tagline', 'মোটো / ট্যাগলাইন')}</Label>
+                <Input value={profile.motto} onChange={e => setProfile(p => ({ ...p, motto: e.target.value }))} placeholder={tx('Your brand tagline...', 'আপনার ব্র্যান্ডের ট্যাগলাইন...')} />
               </div>
 
             </CardContent>
@@ -181,14 +181,14 @@ function SettingsPage() {
             <CardContent className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{lang === 'en' ? 'Primary Color' : 'প্রাথমিক রং'}</Label>
+                  <Label className="text-xs">{tx('Primary Color', 'প্রাথমিক রং')}</Label>
                   <div className="flex items-center gap-2">
                     <input type="color" value={theme.primaryColor} onChange={e => setTheme(t => ({ ...t, primaryColor: e.target.value }))} className="w-10 h-10 rounded-lg cursor-pointer border p-0.5" />
                     <Input value={theme.primaryColor} onChange={e => setTheme(t => ({ ...t, primaryColor: e.target.value }))} className="font-mono text-sm" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{lang === 'en' ? 'Accent Color' : 'অ্যাকসেন্ট রং'}</Label>
+                  <Label className="text-xs">{tx('Accent Color', 'অ্যাকসেন্ট রং')}</Label>
                   <div className="flex items-center gap-2">
                     <input type="color" value={theme.accentColor} onChange={e => setTheme(t => ({ ...t, accentColor: e.target.value }))} className="w-10 h-10 rounded-lg cursor-pointer border p-0.5" />
                     <Input value={theme.accentColor} onChange={e => setTheme(t => ({ ...t, accentColor: e.target.value }))} className="font-mono text-sm" />
@@ -197,21 +197,21 @@ function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{lang === 'en' ? 'Button Style' : 'বাটন স্টাইল'}</Label>
+                <Label>{tx('Button Style', 'বাটন স্টাইল')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {RADIUS_OPTIONS.map(r => (
                     <button key={r} onClick={() => setTheme(t => ({ ...t, borderRadius: r }))}
                       className={`py-2 text-sm border transition-all ${theme.borderRadius === r ? 'font-medium' : 'border-slate-200 text-slate-500'}`}
                       style={{ borderRadius: r === 'sharp' ? '4px' : r === 'medium' ? '8px' : '20px', ...(theme.borderRadius === r ? { borderColor: primaryColor, backgroundColor: primaryColor + '10', color: primaryColor } : {}) }}
                     >
-                      {r === 'sharp' ? (lang === 'en' ? 'Sharp' : 'তীক্ষ্ণ') : r === 'medium' ? (lang === 'en' ? 'Medium' : 'মাঝারি') : (lang === 'en' ? 'Rounded' : 'গোলাকার')}
+                      {r === 'sharp' ? (tx('Sharp', 'তীক্ষ্ণ')) : r === 'medium' ? (tx('Medium', 'মাঝারি')) : (tx('Rounded', 'গোলাকার'))}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>{lang === 'en' ? 'Font' : 'ফন্ট'}</Label>
+                <Label>{tx('Font', 'ফন্ট')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {FONT_OPTIONS.map(f => (
                     <button key={f} onClick={() => setTheme(t => ({ ...t, fontFamily: f }))}
@@ -226,9 +226,9 @@ function SettingsPage() {
 
               {/* Mini preview */}
               <div className="border rounded-xl p-4 space-y-2" style={{ fontFamily: theme.fontFamily }}>
-                <p className="text-xs font-medium text-muted-foreground">{lang === 'en' ? 'Preview' : 'প্রিভিউ'}</p>
+                <p className="text-xs font-medium text-muted-foreground">{tx('Preview', 'প্রিভিউ')}</p>
                 <button className="text-white text-sm px-5 py-2 font-medium" style={{ backgroundColor: theme.primaryColor, borderRadius: theme.borderRadius === 'sharp' ? '4px' : theme.borderRadius === 'medium' ? '8px' : '20px' }}>
-                  {lang === 'en' ? 'Shop Now' : 'এখনই কিনুন'}
+                  {tx('Shop Now', 'এখনই কিনুন')}
                 </button>
                 <div className="flex gap-2">
                   <div className="w-20 h-24 bg-slate-100 rounded" style={{ borderRadius: theme.borderRadius === 'sharp' ? '2px' : theme.borderRadius === 'medium' ? '6px' : '12px' }} />
@@ -257,16 +257,16 @@ function SettingsPage() {
                 <Input value={contact.phone} onChange={e => setContact(c => ({ ...c, phone: e.target.value }))} placeholder="017..." />
               </div>
               <div className="space-y-1.5">
-                <Label>{lang === 'en' ? 'Business Address' : 'ব্যবসার ঠিকানা'}</Label>
+                <Label>{tx('Business Address', 'ব্যবসার ঠিকানা')}</Label>
                 <Input value={contact.address} onChange={e => setContact(c => ({ ...c, address: e.target.value }))} />
               </div>
               <Separator />
               <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5"><span className="text-base">f</span> {lang === 'en' ? 'Facebook Page URL' : 'ফেসবুক পেজ লিংক'}</Label>
+                <Label className="flex items-center gap-1.5"><span className="text-base">f</span> {tx('Facebook Page URL', 'ফেসবুক পেজ লিংক')}</Label>
                 <Input value={contact.facebookPageUrl} onChange={e => setContact(c => ({ ...c, facebookPageUrl: e.target.value }))} placeholder="https://facebook.com/yourpage" />
               </div>
               <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5"><span className="text-base">👥</span> {lang === 'en' ? 'Facebook Group URL' : 'ফেসবুক গ্রুপ লিংক'}</Label>
+                <Label className="flex items-center gap-1.5"><span className="text-base">👥</span> {tx('Facebook Group URL', 'ফেসবুক গ্রুপ লিংক')}</Label>
                 <Input value={contact.facebookGroupUrl} onChange={e => setContact(c => ({ ...c, facebookGroupUrl: e.target.value }))} placeholder="https://facebook.com/groups/..." />
               </div>
             </CardContent>
@@ -279,10 +279,10 @@ function SettingsPage() {
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
                 <Layers className="w-4 h-4" />
-                {lang === 'en' ? 'Cover Photo Design' : 'কভার ফটো ডিজাইন'}
+                {tx('Cover Photo Design', 'কভার ফটো ডিজাইন')}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
-                {lang === 'en' ? 'Select which cover design appears first on your shop homepage.' : 'আপনার শপের হোমপেজে কোন কভার ডিজাইনটি প্রথমে দেখাবে তা বেছে নিন।'}
+                {tx('Select which cover design appears first on your shop homepage.', 'আপনার শপের হোমপেজে কোন কভার ডিজাইনটি প্রথমে দেখাবে তা বেছে নিন।')}
               </p>
             </CardHeader>
             <CardContent>
@@ -304,7 +304,7 @@ function SettingsPage() {
                         {cover.icons.map((icon, i) => <span key={i}>{icon}</span>)}
                       </div>
                       <div className="px-2.5 py-2 bg-white">
-                        <p className="text-xs font-semibold text-gray-800 truncate">{lang === 'en' ? cover.name : cover.nameBn}</p>
+                        <p className="text-xs font-semibold text-gray-800 truncate">{tx(cover.name, cover.nameBn)}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cover.accent }} />
                           {cover.shopSpecific && <span className="text-[10px] text-purple-500 font-medium">Exclusive</span>}
@@ -320,7 +320,7 @@ function SettingsPage() {
                 })}
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                {lang === 'en' ? '💡 The selected cover shows first. Visitors can browse others via arrows.' : '💡 নির্বাচিত কভার প্রথমে দেখাবে। দর্শনার্থীরা অন্যগুলো তীর বোতাম দিয়ে দেখতে পারবে।'}
+                {tx('💡 The selected cover shows first. Visitors can browse others via arrows.', '💡 নির্বাচিত কভার প্রথমে দেখাবে। দর্শনার্থীরা অন্যগুলো তীর বোতাম দিয়ে দেখতে পারবে।')}
               </p>
             </CardContent>
           </Card>
@@ -329,10 +329,10 @@ function SettingsPage() {
         {/* Language Tab */}
         <TabsContent value="language">
           <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4"><CardTitle className="text-base">{lang === 'en' ? 'Language Preference' : 'ভাষা পছন্দ'}</CardTitle></CardHeader>
+            <CardHeader className="pb-4"><CardTitle className="text-base">{tx('Language Preference', 'ভাষা পছন্দ')}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {lang === 'en' ? 'Choose the language for your admin panel.' : 'আপনার অ্যাডমিন প্যানেলের ভাষা বেছে নিন।'}
+                {tx('Choose the language for your admin panel.', 'আপনার অ্যাডমিন প্যানেলের ভাষা বেছে নিন।')}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[

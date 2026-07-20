@@ -82,7 +82,7 @@ export function Header() {
             {t("nav.home")}
           </Link>
           <Link to="/products" className="px-3 py-1.5 text-sm font-medium hover:text-primary [&.active]:text-primary">
-            {t("nav.products")}
+            {t("nav.allProducts")}
           </Link>
           <Link to="/shops" className="px-3 py-1.5 text-sm font-medium hover:text-primary [&.active]:text-primary">
             {lang === "en" ? "🏪 Shops" : "🏪 শপ"}

@@ -21,7 +21,7 @@ function AdminCustomersPage() {
   const { user } = useAuth()
   const { shops } = useAdminStore()
   const { customers, customerOrders } = useCustomerStore()
-  const { lang } = useI18n()
+  const { lang, tx } = useI18n()
   const [search, setSearch] = useState('')
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
   const [detailCustomer, setDetailCustomer] = useState<string | null>(null)
@@ -44,20 +44,20 @@ function AdminCustomersPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-gray-900">
-          {lang === 'en' ? 'Customers' : 'গ্রাহক'}
+          {tx('Customers', 'গ্রাহক')}
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          {lang === 'en' ? 'All registered customers for your shop' : 'আপনার শপের সকল নিবন্ধিত গ্রাহক'}
+          {tx('All registered customers for your shop', 'আপনার শপের সকল নিবন্ধিত গ্রাহক')}
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: lang === 'en' ? 'Total Customers' : 'মোট গ্রাহক', value: shopCustomers.length, icon: Users },
-          { label: lang === 'en' ? 'Total Revenue' : 'মোট আয়', value: fmt(totalRevenue), icon: TrendingUp },
-          { label: lang === 'en' ? 'Avg Spend' : 'গড় খরচ', value: fmt(avgSpend), icon: ShoppingBag },
-          { label: lang === 'en' ? 'Repeat Buyers' : 'পুনরায় ক্রেতা', value: shopCustomers.filter(c => c.totalOrders > 1).length, icon: Users },
+          { label: tx('Total Customers', 'মোট গ্রাহক'), value: shopCustomers.length, icon: Users },
+          { label: tx('Total Revenue', 'মোট আয়'), value: fmt(totalRevenue), icon: TrendingUp },
+          { label: tx('Avg Spend', 'গড় খরচ'), value: fmt(avgSpend), icon: ShoppingBag },
+          { label: tx('Repeat Buyers', 'পুনরায় ক্রেতা'), value: shopCustomers.filter(c => c.totalOrders > 1).length, icon: Users },
         ].map(stat => (
           <div key={stat.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-3">
@@ -80,17 +80,17 @@ function AdminCustomersPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={lang === 'en' ? 'Search customers...' : 'গ্রাহক খুঁজুন...'}
+            placeholder={tx('Search customers...', 'গ্রাহক খুঁজুন...')}
             className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none bg-white"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setSelectedSource(null)} className="text-xs px-3 py-2 rounded-xl border font-medium transition-colors" style={!selectedSource ? { backgroundColor: primary, color: 'white', borderColor: primary } : {}}>
-            {lang === 'en' ? 'All' : 'সব'}
+            {tx('All', 'সব')}
           </button>
           {Object.entries(SOURCE_LABELS).map(([key, val]) => (
             <button key={key} onClick={() => setSelectedSource(selectedSource === key ? null : key)} className="text-xs px-3 py-2 rounded-xl border font-medium transition-colors" style={selectedSource === key ? { backgroundColor: val.color, color: 'white', borderColor: val.color } : {}}>
-              {lang === 'en' ? val.en : val.bn}
+              {tx(val.en, val.bn)}
             </button>
           ))}
         </div>
@@ -101,7 +101,7 @@ function AdminCustomersPage() {
         {shopCustomers.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>{lang === 'en' ? 'No customers found.' : 'কোনো গ্রাহক পাওয়া যায়নি।'}</p>
+            <p>{tx('No customers found.', 'কোনো গ্রাহক পাওয়া যায়নি।')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -109,12 +109,12 @@ function AdminCustomersPage() {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   {[
-                    lang === 'en' ? 'Customer' : 'গ্রাহক',
-                    lang === 'en' ? 'Contact' : 'যোগাযোগ',
-                    lang === 'en' ? 'Source' : 'উৎস',
-                    lang === 'en' ? 'Orders' : 'অর্ডার',
-                    lang === 'en' ? 'Total Spent' : 'মোট খরচ',
-                    lang === 'en' ? 'Last Active' : 'শেষ সক্রিয়',
+                    tx('Customer', 'গ্রাহক'),
+                    tx('Contact', 'যোগাযোগ'),
+                    tx('Source', 'উৎস'),
+                    tx('Orders', 'অর্ডার'),
+                    tx('Total Spent', 'মোট খরচ'),
+                    tx('Last Active', 'শেষ সক্রিয়'),
                     '',
                   ].map(h => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>)}
                 </tr>
@@ -138,7 +138,7 @@ function AdminCustomersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: src.color }}>
-                          {lang === 'en' ? src.en : src.bn}
+                          {tx(src.en, src.bn)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-700 font-medium">{customer.totalOrders}</td>
@@ -147,7 +147,7 @@ function AdminCustomersPage() {
                       <td className="px-4 py-3">
                         <button onClick={() => setDetailCustomer(customer.id)} className="text-xs flex items-center gap-1 text-gray-400 hover:text-gray-700">
                           <Eye className="w-3.5 h-3.5" />
-                          {lang === 'en' ? 'View' : 'দেখুন'}
+                          {tx('View', 'দেখুন')}
                         </button>
                       </td>
                     </tr>
@@ -178,10 +178,10 @@ function AdminCustomersPage() {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: lang === 'en' ? 'Source' : 'উৎস', value: lang === 'en' ? SOURCE_LABELS[selected.source].en : SOURCE_LABELS[selected.source].bn },
-                  { label: lang === 'en' ? 'Registered' : 'নিবন্ধিত', value: selected.registeredAt },
-                  { label: lang === 'en' ? 'Total Orders' : 'মোট অর্ডার', value: selected.totalOrders },
-                  { label: lang === 'en' ? 'Total Spent' : 'মোট খরচ', value: fmt(selected.totalSpent) },
+                  { label: tx('Source', 'উৎস'), value: lang === 'en' ? SOURCE_LABELS[selected.source].en : SOURCE_LABELS[selected.source].bn },
+                  { label: tx('Registered', 'নিবন্ধিত'), value: selected.registeredAt },
+                  { label: tx('Total Orders', 'মোট অর্ডার'), value: selected.totalOrders },
+                  { label: tx('Total Spent', 'মোট খরচ'), value: fmt(selected.totalSpent) },
                 ].map(s => (
                   <div key={s.label} className="bg-gray-50 rounded-xl p-3">
                     <p className="text-xs text-gray-500">{s.label}</p>
@@ -197,7 +197,7 @@ function AdminCustomersPage() {
               )}
               {selectedOrders.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">{lang === 'en' ? 'Order History' : 'অর্ডার ইতিহাস'}</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">{tx('Order History', 'অর্ডার ইতিহাস')}</h4>
                   <div className="space-y-2">
                     {selectedOrders.map(order => (
                       <div key={order.id} className="border rounded-xl p-3">

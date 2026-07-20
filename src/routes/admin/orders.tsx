@@ -21,7 +21,7 @@ const STATUS_LIST: Order['status'][] = ['pending', 'confirmed', 'processing', 's
 function OrdersPage() {
   const { user } = useAuth()
   const { orders, setOrders, shops } = useAdminStore()
-  const { t, lang } = useI18n()
+  const { t, lang, tx } = useI18n()
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<'all' | Order['status']>('all')
   const [viewOrder, setViewOrder] = useState<Order | null>(null)
@@ -82,7 +82,7 @@ function OrdersPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${active ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'}`}
               style={active ? { backgroundColor: primaryColor } : {}}
             >
-              {s === 'all' ? (lang === 'en' ? 'All' : 'সব') : statusLabel(s)}
+              {s === 'all' ? (tx('All', 'সব')) : statusLabel(s)}
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? 'bg-white/25' : 'bg-slate-100'}`}>{count}</span>
             </button>
           )
@@ -91,7 +91,7 @@ function OrdersPage() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder={lang === 'en' ? 'Search order, name, phone...' : 'অর্ডার, নাম, ফোন খুঁজুন...'} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <Input placeholder={tx('Search order, name, phone...', 'অর্ডার, নাম, ফোন খুঁজুন...')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       <Card className="border-0 shadow-sm overflow-hidden">
@@ -99,12 +99,12 @@ function OrdersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-slate-50 text-left">
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Order' : 'অর্ডার'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Customer' : 'গ্রাহক'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Items' : 'আইটেম'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Total' : 'মোট'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Date' : 'তারিখ'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Status' : 'অবস্থা'}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{tx('Order', 'অর্ডার')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{tx('Customer', 'গ্রাহক')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{tx('Items', 'আইটেম')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{tx('Total', 'মোট')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{tx('Date', 'তারিখ')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{tx('Status', 'অবস্থা')}</th>
                 <th className="px-6 py-3 font-medium text-muted-foreground">{t('admin.actions')}</th>
               </tr>
             </thead>
@@ -117,7 +117,7 @@ function OrdersPage() {
                     <p className="text-xs text-muted-foreground">{ord.customerPhone}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-xs text-muted-foreground">{ord.items.length} {lang === 'en' ? 'item(s)' : 'আইটেম'}</p>
+                    <p className="text-xs text-muted-foreground">{ord.items.length} {tx('item(s)', 'আইটেম')}</p>
                     <p className="text-xs truncate max-w-[120px]">{ord.items.map(i => i.name).join(', ')}</p>
                   </td>
                   <td className="px-6 py-4 font-semibold">{fmt(ord.subtotal)}</td>
@@ -144,7 +144,7 @@ function OrdersPage() {
           </table>
           {myOrders.length === 0 && (
             <div className="text-center py-12 text-muted-foreground text-sm">
-              {lang === 'en' ? 'No orders match your filter.' : 'ফিল্টার অনুযায়ী কোনো অর্ডার পাওয়া যায়নি।'}
+              {tx('No orders match your filter.', 'ফিল্টার অনুযায়ী কোনো অর্ডার পাওয়া যায়নি।')}
             </div>
           )}
         </div>
@@ -164,33 +164,33 @@ function OrdersPage() {
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase">{lang === 'en' ? 'Customer' : 'গ্রাহক'}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">{tx('Customer', 'গ্রাহক')}</p>
                   <p className="font-medium mt-1">{viewOrder.customerName}</p>
                   <p className="text-muted-foreground">{viewOrder.customerPhone}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase">{lang === 'en' ? 'Payment' : 'পেমেন্ট'}</p>
-                  <p className="mt-1">{lang === 'en' ? 'Cash on Delivery' : 'ক্যাশ অন ডেলিভারি'}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">{tx('Payment', 'পেমেন্ট')}</p>
+                  <p className="mt-1">{tx('Cash on Delivery', 'ক্যাশ অন ডেলিভারি')}</p>
                 </div>
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase mb-1">{lang === 'en' ? 'Delivery Address' : 'ডেলিভারি ঠিকানা'}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase mb-1">{tx('Delivery Address', 'ডেলিভারি ঠিকানা')}</p>
                 <p className="text-sm">{viewOrder.customerAddress}</p>
               </div>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead><tr className="bg-slate-50 border-b"><th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">{lang === 'en' ? 'Item' : 'আইটেম'}</th><th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Qty</th><th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{lang === 'en' ? 'Price' : 'দাম'}</th></tr></thead>
+                  <thead><tr className="bg-slate-50 border-b"><th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">{tx('Item', 'আইটেম')}</th><th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Qty</th><th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{tx('Price', 'দাম')}</th></tr></thead>
                   <tbody className="divide-y">
                     {viewOrder.items.map((item, i) => (
                       <tr key={i}><td className="px-4 py-2.5">{item.name}</td><td className="px-4 py-2.5 text-right">{item.qty}</td><td className="px-4 py-2.5 text-right font-medium">{fmt(item.price * item.qty)}</td></tr>
                     ))}
                   </tbody>
-                  <tfoot><tr className="border-t bg-slate-50"><td colSpan={2} className="px-4 py-2.5 font-semibold text-right">{lang === 'en' ? 'Total' : 'মোট'}</td><td className="px-4 py-2.5 font-bold text-right">{fmt(viewOrder.subtotal)}</td></tr></tfoot>
+                  <tfoot><tr className="border-t bg-slate-50"><td colSpan={2} className="px-4 py-2.5 font-semibold text-right">{tx('Total', 'মোট')}</td><td className="px-4 py-2.5 font-bold text-right">{fmt(viewOrder.subtotal)}</td></tr></tfoot>
                 </table>
               </div>
               {viewOrder.status !== 'delivered' && viewOrder.status !== 'cancelled' && (
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">{lang === 'en' ? 'Update Status' : 'অবস্থা আপডেট'}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{tx('Update Status', 'অবস্থা আপডেট')}</p>
                   <div className="flex flex-wrap gap-2">
                     {STATUS_LIST.filter(s => s !== viewOrder.status).map(s => (
                       <button

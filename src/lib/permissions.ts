@@ -17,6 +17,7 @@ export function canAccessAdminPath(role: ShopRole, path: string): boolean {
       path.startsWith('/admin/inventory') ||
       path.startsWith('/admin/labels') ||
       path.startsWith('/admin/sell') ||
+      path.startsWith('/admin/suppliers') ||
       path.startsWith('/admin/reports') ||
       path.startsWith('/admin/catalog/categories')
     )
@@ -55,6 +56,7 @@ export function navSectionsForRole(role: ShopRole): { title: string; titleBn: st
     { to: '/admin/labels', labelKey: 'nav.labels' },
   ]
   const finance = [
+    { to: '/admin/suppliers', labelKey: 'nav.suppliers' },
     { to: '/admin/reports', labelKey: 'nav.reports' },
     { to: '/admin/wallet', labelKey: 'nav.wallet' },
     { to: '/admin/staff', labelKey: 'nav.staff' },
@@ -73,6 +75,7 @@ export function navSectionsForRole(role: ShopRole): { title: string; titleBn: st
         { to: '/admin/inventory', labelKey: 'nav.inventory' },
         { to: '/admin/sell', labelKey: 'nav.counterPos' },
         { to: '/admin/labels', labelKey: 'nav.labels' },
+        { to: '/admin/suppliers', labelKey: 'nav.suppliers' },
         { to: '/admin/reports', labelKey: 'nav.reports' },
       ]},
     ]

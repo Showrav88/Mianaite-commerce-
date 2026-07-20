@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { stripProductImages } from '@/lib/media-lock'
 
 export interface ShopTheme {
   primaryColor: string
@@ -391,7 +392,7 @@ function mergeProducts(stored: AdminProduct[]): AdminProduct[] {
   const initialMerged = INITIAL_PRODUCTS.map(p => storedMap.get(p.id) ?? p)
   const initialIds = new Set(INITIAL_PRODUCTS.map(p => p.id))
   const additions = filtered.filter(p => !initialIds.has(p.id))
-  return [...initialMerged, ...additions]
+  return [...initialMerged, ...additions].map(stripProductImages)
 }
 
 function mergeShops(stored: Shop[]): Shop[] {

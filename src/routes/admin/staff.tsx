@@ -20,7 +20,7 @@ export const Route = createFileRoute('/admin/staff')({
 function StaffPage() {
   const { staff, addStaff, paySalary } = useOfficeStore()
   const { user } = useAuth()
-  const { lang } = useI18n()
+  const { t } = useI18n()
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -30,7 +30,7 @@ function StaffPage() {
   if (user?.role !== 'owner') {
     return (
       <div className="p-6 text-sm text-muted-foreground">
-        {lang === 'bn' ? 'স্টাফ ও বেতন শুধু মালিক/manage করতে পারবেন।' : 'Staff & salary is owner-only.'}
+        {t('staff.ownerOnly')}
       </div>
     )
   }
@@ -54,41 +54,39 @@ function StaffPage() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Users className="w-7 h-7 text-orange-500" />
-          {lang === 'bn' ? 'স্টাফ ও বেতন' : 'Staff & salary'}
+          {t('staff.title')}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {lang === 'bn' ? 'ম্যানেজার ও কাউন্টার স্টাফ — মাসিক বেতন ও পরিশোধ।' : 'Managers and counter staff — monthly pay & disbursement.'}
-        </p>
+        <p className="text-muted-foreground text-sm mt-1">{t('staff.subtitle')}</p>
       </div>
 
       <Card className="border-0 shadow-sm">
-        <CardHeader><CardTitle className="text-base">{lang === 'bn' ? 'নতুন স্টাফ' : 'Add staff'}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t('staff.addTitle')}</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={addMember} className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>{lang === 'bn' ? 'নাম' : 'Name'}</Label>
+              <Label>{t('admin.name')}</Label>
               <Input value={name} onChange={e => setName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label>{lang === 'bn' ? 'ফোন' : 'Phone'}</Label>
+              <Label>{t('admin.phone')}</Label>
               <Input value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>{lang === 'bn' ? 'ভূমিকা' : 'Role'}</Label>
+              <Label>{t('staff.role')}</Label>
               <Select value={role} onValueChange={v => setRole(v as 'manager' | 'staff')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manager">{lang === 'bn' ? 'ম্যানেজার' : 'Manager'}</SelectItem>
-                  <SelectItem value="staff">{lang === 'bn' ? 'কর্মী' : 'Staff'}</SelectItem>
+                  <SelectItem value="manager">{t('login.roleManager')}</SelectItem>
+                  <SelectItem value="staff">{t('login.roleStaff')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>{lang === 'bn' ? 'মাসিক বেতন (৳)' : 'Monthly salary (৳)'}</Label>
+              <Label>{t('staff.monthlySalary')}</Label>
               <Input type="number" value={salary} onChange={e => setSalary(e.target.value)} />
             </div>
             <div className="sm:col-span-2">
-              <Button type="submit">{lang === 'bn' ? 'যোগ করুন' : 'Add'}</Button>
+              <Button type="submit">{t('staff.addBtn')}</Button>
             </div>
           </form>
         </CardContent>
@@ -101,13 +99,17 @@ function StaffPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold">{s.name}</p>
-                  <Badge variant="secondary">{s.role === 'manager' ? (lang === 'bn' ? 'ম্যানেজার' : 'Manager') : (lang === 'bn' ? 'কর্মী' : 'Staff')}</Badge>
-                  {!s.active && <Badge variant="outline">Inactive</Badge>}
+                  <Badge variant="secondary">
+                    {s.role === 'manager' ? t('login.roleManager') : t('login.roleStaff')}
+                  </Badge>
+                  {!s.active && <Badge variant="outline">{t('staff.inactive')}</Badge>}
                 </div>
-                <p className="text-sm text-muted-foreground">{s.phone} · {fmt(s.monthlySalary)}/{lang === 'bn' ? 'মাস' : 'mo'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {s.phone} · {fmt(s.monthlySalary)}/{t('staff.perMonth')}
+                </p>
                 {s.lastPaidAt && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {lang === 'bn' ? 'সর্বশেষ বেতন' : 'Last paid'}: {s.lastPaidAt}
+                    {t('staff.lastPaid')}: {s.lastPaidAt}
                   </p>
                 )}
               </div>
@@ -118,7 +120,7 @@ function StaffPage() {
                 onClick={() => paySalary(s.id, s.monthlySalary, 'cash')}
               >
                 <Banknote className="w-4 h-4" />
-                {lang === 'bn' ? 'বেতন দিন' : 'Pay salary'}
+                {t('staff.paySalary')}
               </Button>
             </CardContent>
           </Card>

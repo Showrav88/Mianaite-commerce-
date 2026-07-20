@@ -1,26 +1,24 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ShoppingCart, Package, AlertTriangle, TrendingUp, ArrowUpRight, Clock, Megaphone, Check } from 'lucide-react'
-import { useState } from 'react'
+import { Package, AlertTriangle, TrendingUp, ArrowUpRight, ScanLine, Wallet, Truck, Lock } from 'lucide-react'
+import { useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { useAdminStore, ALL_CATEGORIES, fmt } from '@/lib/admin-store'
+import { useAdminStore, fmt } from '@/lib/admin-store'
 import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
+import { useMarketStore } from '@/lib/market-store'
+import { useOfficeStore, walletBalance, dealGrandTotal } from '@/lib/office-store'
+import { filterPosOrders, groupSalesByDay, sumOrderRevenue, todayIso } from '@/lib/pos-stats'
+import { ProductThumb } from '@/components/office/ProductThumb'
+import { OFFICE_IMAGES_LOCKED } from '@/lib/media-lock'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
-  head: () => ({ meta: [{ title: 'Admin Dashboard — AITeShops' }] }),
+  head: () => ({ meta: [{ title: 'Office Dashboard — 1to99' }] }),
 })
 
-const weekOrders = [
-  { day: 'Mon', orders: 12 }, { day: 'Tue', orders: 19 },
-  { day: 'Wed', orders: 8 }, { day: 'Thu', orders: 24 },
-  { day: 'Fri', orders: 18 }, { day: 'Sat', orders: 31 }, { day: 'Sun', orders: 27 },
-]
-
-function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string; sub?: string; color: string }) {
+function StatCard({ icon: Icon, label, value, sub, color }: { icon: typeof Package; label: string; value: string; sub?: string; color: string }) {
   return (
     <Card className="border-0 shadow-sm">
       <CardContent className="pt-5 pb-4">
@@ -41,57 +39,62 @@ function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: 
 
 function AdminDashboard() {
   const { user } = useAuth()
-  const { orders, products, shops, setShops } = useAdminStore()
-  const { t, lang } = useI18n()
+  const { products, shops } = useAdminStore()
+  const { orders: posOrdersAll, currentShift } = useMarketStore()
+  const { wallet, supplierDeals } = useOfficeStore()
+  const { t, lang, tx } = useI18n()
 
   const shop = shops.find(s => s.id === user?.shopId)
   const primaryColor = shop?.theme.primaryColor ?? '#f97316'
+  const today = todayIso()
 
-  const [broadcastText, setBroadcastText] = useState(shop?.broadcast?.text ?? '')
-  const [broadcastActive, setBroadcastActive] = useState(shop?.broadcast?.active ?? false)
-  const [broadcastSaved, setBroadcastSaved] = useState(false)
+  const counterOrders = useMemo(
+    () => filterPosOrders(posOrdersAll, user?.shopId),
+    [posOrdersAll, user?.shopId],
+  )
 
-  function saveBroadcast() {
-    if (!shop) return
-    setShops(shops.map(s => s.id === shop.id
-      ? { ...s, broadcast: { text: broadcastText, active: broadcastActive } }
-      : s
-    ))
-    setBroadcastSaved(true)
-    setTimeout(() => setBroadcastSaved(false), 2500)
-  }
-
-  const myOrders = orders.filter(o => o.shopId === user?.shopId)
   const myProducts = products.filter(p => p.shopId === user?.shopId)
-  const pendingOrders = myOrders.filter(o => o.status === 'pending')
   const lowStockItems = myProducts.filter(p => p.stock <= p.lowStockThreshold && p.stock > 0)
   const outOfStock = myProducts.filter(p => p.stock === 0)
-  const monthRevenue = myOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.subtotal, 0)
-  const todayOrders = myOrders.filter(o => o.createdAt === '2026-05-19')
+  const todayCounter = counterOrders.filter(o => o.createdAt === today)
+  const todaySales = sumOrderRevenue(todayCounter)
+  const monthPrefix = today.slice(0, 7)
+  const monthCounter = counterOrders.filter(o => o.createdAt.startsWith(monthPrefix))
+  const monthSales = sumOrderRevenue(monthCounter)
+  const balance = walletBalance(wallet)
+  const pendingDeals = supplierDeals.filter(d => d.status === 'awaiting_payment')
+  const paidAwaitingStock = supplierDeals.filter(d => d.status === 'paid')
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      pending: 'bg-amber-100 text-amber-700', confirmed: 'bg-cyan-100 text-cyan-700',
-      processing: 'bg-blue-100 text-blue-700', shipped: 'bg-violet-100 text-violet-700',
-      delivered: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-600',
-    }
-    const key = `admin.status.${status}` as any
-    return <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>{t(key)}</span>
-  }
+  const weekChart = useMemo(() => {
+    const byDay = groupSalesByDay(counterOrders)
+    const last7 = byDay.slice(-7)
+    return last7.map(d => ({
+      day: d.date.slice(5),
+      sales: d.sales,
+    }))
+  }, [counterOrders])
+
+  const recentBills = counterOrders.slice(0, 5)
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          {t('admin.welcome')}, {user?.name?.split(' ')[0]} 👋
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {lang === 'en' ? `Managing ${shop?.name ?? user?.shopName}` : `${shop?.name ?? user?.shopName} পরিচালনা করছেন`}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {t('admin.welcome')}, {user?.name?.split(' ')[0]} 👋
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {tx('Counter POS & back office — no online orders', 'কাউন্টার POS ও ব্যাক অফিস — অনলাইন অর্ডার নেই')}
+          </p>
+        </div>
+        {OFFICE_IMAGES_LOCKED && (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600">
+            <Lock className="w-3.5 h-3.5" />
+            {tx('Product images locked', 'পণ্যের ছবি লক')}
+          </span>
+        )}
       </div>
 
-      {/* Alerts */}
       {(lowStockItems.length > 0 || outOfStock.length > 0) && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
@@ -112,151 +115,134 @@ function AdminDashboard() {
             )}
           </div>
           <Link to="/admin/inventory" className="text-xs font-medium text-amber-700 hover:text-amber-900 flex items-center gap-1">
-            {lang === 'en' ? 'Restock' : 'পুনঃস্টক'} <ArrowUpRight className="w-3 h-3" />
+            {tx('Restock', 'পুনঃস্টক')} <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={ShoppingCart} label={t('admin.todayOrders')} value={String(todayOrders.length)} sub={`${pendingOrders.length} ${lang === 'en' ? 'pending' : 'অপেক্ষমান'}`} color={primaryColor} />
-        <StatCard icon={TrendingUp} label={t('admin.revenue')} value={fmt(monthRevenue)} sub={lang === 'en' ? 'All-time' : 'সর্বকালীন'} color="#22c55e" />
-        <StatCard icon={Package} label={t('admin.products')} value={String(myProducts.length)} sub={`${myProducts.filter(p => p.status === 'active').length} ${lang === 'en' ? 'active' : 'সক্রিয়'}`} color="#6366f1" />
-        <StatCard icon={AlertTriangle} label={t('admin.lowStock')} value={String(lowStockItems.length + outOfStock.length)} sub={`${outOfStock.length} ${lang === 'en' ? 'out of stock' : 'স্টক শেষ'}`} color="#f97316" />
+        <StatCard
+          icon={ScanLine}
+          label={tx("Today's counter sales", 'আজকের কাউন্টার বিক্রয়')}
+          value={fmt(todaySales)}
+          sub={`${todayCounter.length} ${tx('bills', 'বিল')}`}
+          color={primaryColor}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label={tx('This month (counter)', 'এই মাস (কাউন্টার)')}
+          value={fmt(monthSales)}
+          sub={`${monthCounter.length} ${tx('bills', 'বিল')}`}
+          color="#22c55e"
+        />
+        <StatCard
+          icon={Wallet}
+          label={t('wallet.balance')}
+          value={fmt(balance)}
+          sub={tx('Pay supplier deals from here', 'সাপ্লায়ার ডিল এখান থেকে পরিশোধ')}
+          color="#6366f1"
+        />
+        <StatCard
+          icon={Package}
+          label={t('admin.products')}
+          value={String(myProducts.length)}
+          sub={`${pendingDeals.length} ${tx('deals to pay', 'ডিল বাকি')}`}
+          color="#f97316"
+        />
       </div>
 
-      {/* Broadcast Banner */}
-      {shop && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Megaphone className="w-4 h-4" style={{ color: primaryColor }} />
-                {lang === 'en' ? 'Shop Broadcast Banner' : 'শপ ব্রডকাস্ট ব্যানার'}
-              </CardTitle>
-              <button
-                type="button"
-                onClick={() => setBroadcastActive(v => !v)}
-                className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                style={{ backgroundColor: broadcastActive ? primaryColor : '#d1d5db' }}
-              >
-                <span
-                  className="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform"
-                  style={{ transform: broadcastActive ? 'translateX(22px)' : 'translateX(2px)' }}
-                />
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {lang === 'en' ? 'This scrolling text shows on your shop homepage when active.' : 'সক্রিয় থাকলে এই টেক্সট শপের হোমপেজে স্ক্রোল করে দেখাবে।'}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <textarea
-              value={broadcastText}
-              onChange={e => setBroadcastText(e.target.value)}
-              rows={2}
-              placeholder={lang === 'en' ? '🔥 Sale text with emoji... e.g. 🔥 Eid Special — 20% OFF! ⚡ Limited time!' : '🔥 অফারের টেক্সট লিখুন... যেমন: 🔥 ঈদ স্পেশাল সেল — ২০% ছাড়! ⚡ সীমিত সময়!'}
-              className="w-full text-sm border rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-1"
-              style={{ '--tw-ring-color': primaryColor } as any}
-            />
-            {broadcastText && broadcastActive && (
-              <div className="rounded-lg overflow-hidden border border-red-200 bg-red-600 text-white py-1.5 px-3 text-xs font-bold truncate opacity-90">
-                {lang === 'en' ? 'Preview:' : 'প্রিভিউ:'} {broadcastText}
-              </div>
-            )}
-            <Button
-              size="sm"
-              className="gap-2 text-white"
-              style={{ backgroundColor: primaryColor }}
-              onClick={saveBroadcast}
-              disabled={!broadcastText.trim()}
-            >
-              {broadcastSaved ? <><Check className="w-3.5 h-3.5" />{lang === 'en' ? 'Saved!' : 'সংরক্ষিত!'}</> : (lang === 'en' ? 'Save & Publish' : 'সেভ করুন')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Allowed categories — updates live when super admin changes access */}
-      {shop && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">{lang === 'en' ? 'Your Allowed Categories' : 'আপনার অনুমোদিত ক্যাটাগরি'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {shop.allowedCategories.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {lang === 'en' ? 'No categories assigned yet. Contact your super admin.' : 'এখনো কোনো ক্যাটাগরি নির্ধারিত হয়নি। সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।'}
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {shop.allowedCategories.map(cid => {
-                  const cat = ALL_CATEGORIES.find(c => c.id === cid)
-                  return cat ? (
-                    <span key={cid} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-white" style={{ backgroundColor: primaryColor }}>
-                      {cat.icon} {lang === 'en' ? cat.name : cat.nameBn}
-                    </span>
-                  ) : null
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {(currentShift || pendingDeals.length > 0 || paidAwaitingStock.length > 0) && (
+        <div className="grid sm:grid-cols-3 gap-4">
+          {currentShift && (
+            <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs text-muted-foreground">{tx('Counter shift open', 'কাউন্টার শিফট চালু')}</p>
+                <p className="font-semibold">{currentShift.cashier}</p>
+                <p className="text-xs text-muted-foreground mt-1">{currentShift.startedAt}</p>
+                <Button asChild size="sm" variant="outline" className="mt-3 w-full">
+                  <Link to="/counter">{t('nav.fullPos')}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          {pendingDeals.length > 0 && (
+            <Card className="border-0 shadow-sm border-l-4 border-l-amber-500">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Truck className="w-3.5 h-3.5" /> {tx('Supplier deals — payment due', 'সাপ্লায়ার ডিল — পেমেন্ট বাকি')}</p>
+                <p className="text-lg font-bold">{pendingDeals.length}</p>
+                <p className="text-xs text-muted-foreground">{fmt(pendingDeals.reduce((s, d) => s + dealGrandTotal(d), 0))} {tx('total', 'মোট')}</p>
+                <Button asChild size="sm" className="mt-3 w-full text-white" style={{ backgroundColor: primaryColor }}>
+                  <Link to="/admin/suppliers">{tx('Open suppliers', 'সাপ্লায়ার')}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          {paidAwaitingStock.length > 0 && (
+            <Card className="border-0 shadow-sm border-l-4 border-l-blue-500">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs text-muted-foreground">{tx('Paid — receive to stock', 'পেইড — স্টকে নিন')}</p>
+                <p className="text-lg font-bold">{paidAwaitingStock.length}</p>
+                <Button asChild size="sm" variant="outline" className="mt-3 w-full">
+                  <Link to="/admin/suppliers">{tx('Receive stock', 'স্টক রিসিভ')}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Orders chart */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">{lang === 'en' ? 'Orders This Week' : 'এই সপ্তাহের অর্ডার'}</CardTitle>
+            <CardTitle className="text-base">{tx('Counter sales (recent days)', 'কাউন্টার বিক্রয় (সাম্প্রতিক)')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={weekOrders} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
-                <defs>
-                  <linearGradient id="ordGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={primaryColor} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="orders" stroke={primaryColor} fill="url(#ordGrad)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {weekChart.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">{tx('No counter bills yet.', 'এখনো কাউন্টার বিল নেই।')}</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={weekChart} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
+                  <defs>
+                    <linearGradient id="posGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={primaryColor} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(v: number) => fmt(v)} />
+                  <Area type="monotone" dataKey="sales" stroke={primaryColor} fill="url(#posGrad)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent orders */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">{lang === 'en' ? 'Recent Orders' : 'সাম্প্রতিক অর্ডার'}</CardTitle>
-            <Link to="/admin/orders" className="text-xs font-medium flex items-center gap-1" style={{ color: primaryColor }}>
-              {lang === 'en' ? 'View all' : 'সব দেখুন'} <ArrowUpRight className="w-3 h-3" />
+            <CardTitle className="text-base">{tx('Recent counter bills', 'সাম্প্রতিক কাউন্টার বিল')}</CardTitle>
+            <Link to="/admin/reports" className="text-xs font-medium flex items-center gap-1" style={{ color: primaryColor }}>
+              {t('nav.reports')} <ArrowUpRight className="w-3 h-3" />
             </Link>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
-              {myOrders.slice(0, 4).map(ord => (
+              {recentBills.map(ord => (
                 <div key={ord.id} className="px-6 py-3 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
-                    <Clock className="w-4 h-4 text-slate-400" />
+                  <div className="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center shrink-0">
+                    <ScanLine className="w-4 h-4 text-orange-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{ord.customerName}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{ord.orderNumber}</p>
+                    <p className="text-sm font-medium truncate">{ord.orderNumber}</p>
+                    <p className="text-xs text-muted-foreground">{ord.createdAt} · {ord.paymentMethod}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold">{fmt(ord.subtotal)}</p>
-                    {statusBadge(ord.status)}
-                  </div>
+                  <p className="text-sm font-semibold shrink-0">{fmt(ord.total)}</p>
                 </div>
               ))}
-              {myOrders.length === 0 && (
+              {recentBills.length === 0 && (
                 <p className="px-6 py-8 text-center text-sm text-muted-foreground">
-                  {lang === 'en' ? 'No orders yet.' : 'এখনো কোনো অর্ডার নেই।'}
+                  {tx('No counter bills yet.', 'এখনো কাউন্টার বিল নেই।')}
                 </p>
               )}
             </div>
@@ -264,27 +250,25 @@ function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Low stock table */}
       {lowStockItems.length > 0 && (
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base text-amber-700">⚠️ {t('admin.lowStock')} {lang === 'en' ? 'Alerts' : 'সতর্কতা'}</CardTitle>
+            <CardTitle className="text-base text-amber-700">⚠️ {t('admin.lowStock')}</CardTitle>
             <Link to="/admin/inventory" className="text-xs font-medium" style={{ color: primaryColor }}>
               {t('admin.restock')} →
             </Link>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
-              {lowStockItems.map(p => (
+              {lowStockItems.slice(0, 6).map(p => (
                 <div key={p.id} className="px-6 py-3 flex items-center gap-3">
-                  <img src={p.image} alt={p.name} className="w-8 h-8 rounded object-cover shrink-0" />
+                  <ProductThumb src={p.image} alt={p.name} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{p.name}</p>
                     <p className="text-xs text-muted-foreground font-mono">{p.sku}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-amber-600">{p.stock} {lang === 'en' ? 'left' : 'বাকি'}</p>
-                    <p className="text-xs text-muted-foreground">{lang === 'en' ? `Min: ${p.lowStockThreshold}` : `সর্বনিম্ন: ${p.lowStockThreshold}`}</p>
+                    <p className="text-sm font-bold text-amber-600">{p.stock} {tx('left', 'বাকি')}</p>
                   </div>
                 </div>
               ))}

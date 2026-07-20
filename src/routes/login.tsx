@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { Store, Lock, Eye, Globe, Crown, UserCog, User } from 'lucide-react'
 import { z } from 'zod'
 import { useAuth, DEMO_ACCOUNTS, DEMO_PASSWORD, type AuthUser } from '@/lib/auth'
-import { useI18n } from '@/lib/i18n'
+import { useI18n, type Lang } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { homeRouteForRole, canAccessAdminPath, canAccessCounter } from '@/lib/permissions'
 
@@ -38,16 +38,16 @@ function clearSessionStorage() {
   } catch {}
 }
 
-const ROLE_META: Record<AuthUser['role'], { icon: typeof Crown; badgeEn: string; badgeBn: string; color: string }> = {
-  owner: { icon: Crown, badgeEn: 'Owner / Admin', badgeBn: 'মালিক / অ্যাডমিন', color: 'violet' },
-  manager: { icon: UserCog, badgeEn: 'Manager', badgeBn: 'ম্যানেজার', color: 'emerald' },
-  staff: { icon: User, badgeEn: 'Staff', badgeBn: 'কর্মী', color: 'sky' },
+const ROLE_META: Record<AuthUser['role'], { icon: typeof Crown; badgeKey: 'login.roleOwner' | 'login.roleManager' | 'login.roleStaff'; color: string }> = {
+  owner: { icon: Crown, badgeKey: 'login.roleOwner', color: 'violet' },
+  manager: { icon: UserCog, badgeKey: 'login.roleManager', color: 'emerald' },
+  staff: { icon: User, badgeKey: 'login.roleStaff', color: 'sky' },
 }
 
 function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
-  const { lang, setLang } = useI18n()
+  const { t, lang, setLang } = useI18n()
   const { redirect: redirectRaw } = Route.useSearch()
 
   useEffect(() => {
@@ -70,20 +70,14 @@ function LoginPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-orange-500 mb-4 shadow-lg">
             <Store className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            {lang === 'bn' ? '১টু৯৯ — অফিস লগইন' : '1to99 — Office Login'}
-          </h1>
-          <p className="text-slate-400 text-sm mt-1.5">
-            {lang === 'bn'
-              ? 'ইনভেন্টরি, কাউন্টার POS, হিসাব ও স্টাফ — শুধু ব্যাক-অফিস'
-              : 'Inventory, counter POS, accounts & staff — back-office only'}
-          </p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">{t('login.officeTitle')}</h1>
+          <p className="text-slate-400 text-sm mt-1.5">{t('login.officeSubtitle')}</p>
         </div>
 
         <div className="flex items-start gap-2 bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-3 mb-5 text-xs text-slate-400">
           <Eye className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" />
           <span>
-            {lang === 'bn' ? 'ডেমো পাসওয়ার্ড' : 'Demo password'}:{' '}
+            {t('login.demoPasswordLabel')}:{' '}
             <span className="font-mono font-semibold text-slate-200">{DEMO_PASSWORD}</span>
           </span>
         </div>
@@ -106,7 +100,7 @@ function LoginPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-sm text-white">{acc.name}</span>
                     <Badge className="text-[10px] bg-slate-700 text-slate-300 border-0 px-1.5 py-0">
-                      {lang === 'bn' ? meta.badgeBn : meta.badgeEn}
+                      {t(meta.badgeKey)}
                     </Badge>
                   </div>
                   <p className="text-xs text-orange-400/80 mt-0.5 font-mono truncate">{acc.email}</p>
@@ -121,15 +115,13 @@ function LoginPage() {
         </div>
 
         <div className="flex items-center justify-between mt-7">
-          <p className="text-[11px] text-slate-600">
-            {lang === 'bn' ? 'কোনো অনলাইন শপ নেই — POS ও অ্যাডমিন' : 'No online shop — POS & admin only'}
-          </p>
+          <p className="text-[11px] text-slate-600">{t('login.noOnlineShop')}</p>
           <button
-            onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
+            onClick={() => setLang((lang === 'en' ? 'bn' : 'en') as Lang)}
             className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
           >
             <Globe className="w-3.5 h-3.5" />
-            {lang === 'en' ? 'বাংলা' : 'English'}
+            {lang === 'en' ? t('common.viewInBangla') : t('common.viewInEnglish')}
           </button>
         </div>
       </div>

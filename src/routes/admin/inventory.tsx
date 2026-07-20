@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { ProductThumb } from '@/components/office/ProductThumb'
 
 export const Route = createFileRoute('/admin/inventory')({
   component: InventoryPage,
@@ -20,7 +21,7 @@ export const Route = createFileRoute('/admin/inventory')({
 function InventoryPage() {
   const { user } = useAuth()
   const { products, setProducts, shops } = useAdminStore()
-  const { t, lang } = useI18n()
+  const { t, lang, tx } = useI18n()
   const [search, setSearch] = useState('')
   const [restockProduct, setRestockProduct] = useState<AdminProduct | null>(null)
   const [restockQty, setRestockQty] = useState('10')
@@ -61,7 +62,7 @@ function InventoryPage() {
   const stockStatus = (p: AdminProduct) => {
     if (p.stock === 0) return { label: t('admin.outOfStock'), color: 'text-red-600', bg: 'bg-red-50 border-red-200' }
     if (p.stock <= p.lowStockThreshold) return { label: t('admin.lowStock'), color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' }
-    return { label: lang === 'en' ? 'In Stock' : 'স্টকে আছে', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
+    return { label: tx('In Stock', 'স্টকে আছে'), color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
   }
 
   const stockPercent = (p: AdminProduct) => {
@@ -74,8 +75,8 @@ function InventoryPage() {
       <div>
         <h1 className="text-2xl font-bold">{t('admin.inventory')}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {lang === 'en' ? `${allMy.length} products tracked` : `${allMy.length}টি পণ্য ট্র্যাক করা হচ্ছে`}
-          {!canEdit && (lang === 'en' ? ' · View only' : ' · শুধু দেখা')}
+          {t('inventory.tracked', { n: String(allMy.length) })}
+          {!canEdit && ` · ${t('inventory.viewOnly')}`}
         </p>
       </div>
 
@@ -84,7 +85,7 @@ function InventoryPage() {
         <Card className="border-0 shadow-sm bg-emerald-50 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter('all')}>
           <CardContent className="pt-5 pb-4">
             <p className="text-2xl font-bold text-emerald-700">{inStock}</p>
-            <p className="text-sm text-emerald-600 mt-0.5">{lang === 'en' ? 'In Stock' : 'স্টকে আছে'}</p>
+            <p className="text-sm text-emerald-600 mt-0.5">{tx('In Stock', 'স্টকে আছে')}</p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm bg-amber-50 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter('low')}>
@@ -109,7 +110,7 @@ function InventoryPage() {
         </div>
         <div className="flex gap-2">
           {(['all', 'low', 'out'] as const).map(f => {
-            const labels = { all: lang === 'en' ? 'All' : 'সব', low: t('admin.lowStock'), out: t('admin.outOfStock') }
+            const labels = { all: tx('All', 'সব'), low: t('admin.lowStock'), out: t('admin.outOfStock') }
             return (
               <button
                 key={f}
@@ -130,11 +131,11 @@ function InventoryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-slate-50 text-left">
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Product' : 'পণ্য'}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{t('inventory.product')}</th>
                 <th className="px-6 py-3 font-medium text-muted-foreground">SKU</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Category' : 'ক্যাটাগরি'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Stock Level' : 'স্টক লেভেল'}</th>
-                <th className="px-6 py-3 font-medium text-muted-foreground">{lang === 'en' ? 'Status' : 'অবস্থা'}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{t('inventory.category')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{t('inventory.stockLevel')}</th>
+                <th className="px-6 py-3 font-medium text-muted-foreground">{t('inventory.status')}</th>
                 <th className="px-6 py-3 font-medium text-muted-foreground">{t('admin.actions')}</th>
               </tr>
             </thead>
@@ -146,25 +147,22 @@ function InventoryPage() {
                   <tr key={p.id} className={`hover:bg-slate-50/50 ${p.stock === 0 ? 'bg-red-50/30' : p.stock <= p.lowStockThreshold ? 'bg-amber-50/30' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        {p.image
-                          ? <img src={p.image} alt={p.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
-                          : <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center shrink-0"><Package className="w-4 h-4 text-slate-400" /></div>
-                        }
+                        <ProductThumb src={p.image} alt={p.name} size="md" />
                         <div className="min-w-0">
                           <p className="font-medium text-sm truncate">{p.name}</p>
-                          <p className="text-xs text-muted-foreground">{lang === 'en' ? `Min: ${p.lowStockThreshold}` : `সর্বনিম্ন: ${p.lowStockThreshold}`}</p>
+                          <p className="text-xs text-muted-foreground">{t('inventory.minStock', { n: String(p.lowStockThreshold) })}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-6 py-4">
-                      {cat && <span className="text-xs">{cat.icon} {lang === 'en' ? cat.name : cat.nameBn}</span>}
+                      {cat && <span className="text-xs">{cat.icon} {tx(cat.name, cat.nameBn)}</span>}
                     </td>
                     <td className="px-6 py-4 w-48">
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className={`font-bold text-sm ${status.color}`}>{p.stock}</span>
-                          <span className="text-xs text-muted-foreground">{lang === 'en' ? 'units' : 'ইউনিট'}</span>
+                          <span className="text-xs text-muted-foreground">{t('inventory.units')}</span>
                         </div>
                         <Progress value={stockPercent(p)} className="h-1.5"
                           style={{ '--progress-foreground': p.stock === 0 ? '#ef4444' : p.stock <= p.lowStockThreshold ? '#f59e0b' : primaryColor } as any}
@@ -198,7 +196,7 @@ function InventoryPage() {
           </table>
           {myProducts.length === 0 && (
             <div className="text-center py-12 text-muted-foreground text-sm">
-              {lang === 'en' ? 'No products match your filter.' : 'ফিল্টার অনুযায়ী কোনো পণ্য পাওয়া যায়নি।'}
+              {tx('No products match your filter.', 'ফিল্টার অনুযায়ী কোনো পণ্য পাওয়া যায়নি।')}
             </div>
           )}
         </div>
@@ -212,14 +210,14 @@ function InventoryPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-              {restockProduct?.image && <img src={restockProduct.image} className="w-12 h-12 rounded-lg object-cover" />}
+              {restockProduct && <ProductThumb src={restockProduct.image} alt={restockProduct.name} size="lg" />}
               <div>
                 <p className="font-medium text-sm">{restockProduct?.name}</p>
-                <p className="text-xs text-muted-foreground">{lang === 'en' ? `Current stock: ${restockProduct?.stock}` : `বর্তমান স্টক: ${restockProduct?.stock}`}</p>
+                <p className="text-xs text-muted-foreground">{t('inventory.currentStock', { n: String(restockProduct?.stock ?? 0) })}</p>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>{lang === 'en' ? 'Quantity to Add' : 'যোগ করার পরিমাণ'}</Label>
+              <Label>{t('inventory.qtyAdd')}</Label>
               <Input
                 type="number"
                 min={1}
@@ -228,9 +226,7 @@ function InventoryPage() {
                 className="text-center text-lg font-bold"
               />
               <p className="text-xs text-muted-foreground text-center">
-                {lang === 'en'
-                  ? `New total: ${(restockProduct?.stock ?? 0) + Number(restockQty)} units`
-                  : `নতুন মোট: ${(restockProduct?.stock ?? 0) + Number(restockQty)} ইউনিট`}
+                {t('inventory.newTotal', { n: String((restockProduct?.stock ?? 0) + Number(restockQty)) })}
               </p>
             </div>
           </div>
